@@ -1,4 +1,6 @@
 mod image;
+mod vec3;
+mod ray;
 
 #[cfg(test)]
 mod tests {
@@ -6,6 +8,6 @@ mod tests {
 
     #[test]
     fn it_works() {
-        image::Image::print_image(256, 256);
+        image::print_image(256, 256);
     }
 }
