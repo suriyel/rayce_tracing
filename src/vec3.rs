@@ -1,25 +1,9 @@
-use std::ops::{Add, AddAssign, Deref, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::io::{self, Write};
 
 #[derive(Debug)]
 pub struct Vec3 {
     e: [f64; 3],
-}
-
-impl Clone for Vec3 {
-    fn clone(&self) -> Self {
-        Vec3{
-            e:[
-                self.e[0],
-                self.e[1],
-                self.e[2]
-            ]
-        }
-    }
-}
-
-impl Copy for Vec3 {
-
 }
 
 impl Vec3 {
@@ -65,19 +49,19 @@ impl Vec3 {
         Ok(())
     }
 }
-// impl<'a,'b> Add<&'b Vec3> for &'a Vec3 {
-//     type Output = Vec3;
-//
-//     fn add(self, other: &'b Vec3) -> Self::Output {
-//         Vec3 {
-//             e: [
-//                 self.e[0] + other.e[0],
-//                 self.e[1] + other.e[1],
-//                 self.e[2] + other.e[2]
-//             ]
-//         }
-//     }
-// }
+impl<'a,'b> Add<&'b Vec3> for &'a Vec3 {
+    type Output = Vec3;
+
+    fn add(self, other: &'b Vec3) -> Self::Output {
+        Vec3 {
+            e: [
+                self.e[0] + other.e[0],
+                self.e[1] + other.e[1],
+                self.e[2] + other.e[2]
+            ]
+        }
+    }
+}
 
 impl Add for Vec3 {
     type Output = Vec3;
@@ -134,6 +118,20 @@ impl Div<f64> for Vec3 {
                 ]
             }
         )
+    }
+}
+
+impl<'a> Mul<f64> for &'a Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, other: f64) -> Self::Output {
+        Vec3{
+            e:[
+                self.e[0] * other,
+                self.e[1] * other,
+                self.e[2] * other
+            ]
+        }
     }
 }
 
