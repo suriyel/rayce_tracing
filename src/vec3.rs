@@ -224,6 +224,12 @@ impl<'a> AddAssign<&'a Vec3> for Vec3 {
     }
 }
 
+impl AddAssign for Vec3 {
+    fn add_assign(&mut self, other: Self) {
+        (*self) += &other;
+    }
+}
+
 impl AddAssign<f64> for Vec3 {
     fn add_assign(&mut self, other: f64) {
         let Vec3 { e } = self;
@@ -233,12 +239,20 @@ impl AddAssign<f64> for Vec3 {
     }
 }
 
+impl<'a> SubAssign<&'a Vec3> for Vec3 {
+    fn sub_assign(&mut self, other: &'a Vec3) {
+        let Vec3 { e } = self;
+        let Vec3 {e:[x,y,z]} = *other;
+
+        e[0] -= x;
+        e[1] -= y;
+        e[2] -= z;
+    }
+}
+
 impl SubAssign for Vec3 {
     fn sub_assign(&mut self, other: Self) {
-        let Vec3 { e } = self;
-        e[0] -= other.e[0];
-        e[1] -= other.e[1];
-        e[2] -= other.e[2];
+        (*self) -= &other;
     }
 }
 
