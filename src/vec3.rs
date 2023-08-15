@@ -213,26 +213,14 @@ impl Div for Vec3 {
     }
 }
 
-impl Deref for Vec3 {
-    type Target = [f64];
-
-    fn deref(&self) -> &Self::Target {
-        &self.e
-    }
-}
-
-impl DerefMut for Vec3 {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.e
-    }
-}
-
-impl AddAssign for Vec3 {
-    fn add_assign(&mut self, other: Self) {
+impl<'a> AddAssign<&'a Vec3> for Vec3 {
+    fn add_assign(&mut self, other: &'a Vec3) {
         let Vec3 { e } = self;
-        e[0] += other.e[0];
-        e[1] += other.e[1];
-        e[2] += other.e[2];
+        let Vec3 { e:[x,y,z]} = *other;
+
+        e[0] += x;
+        e[1] += y;
+        e[2] += z;
     }
 }
 
