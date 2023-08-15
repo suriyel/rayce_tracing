@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Deref, DerefMut, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::io::{self, Write};
 
 #[derive(Debug)]
@@ -67,30 +67,31 @@ impl Add for Vec3 {
     type Output = Vec3;
 
     fn add(self, other: Vec3) -> Self::Output {
-        Vec3 {
-            e: [
-                self.e[0] + other.e[0],
-                self.e[1] + other.e[1],
-                self.e[2] + other.e[2]
-            ]
-        }
+        &self + &other
     }
 }
 
-impl Neg for Vec3 {
+impl<'a> Neg for &'a Vec3 {
     type Output = Vec3;
 
-    fn neg(self) -> Self::Output {
+    fn neg(self) -> Vec3 {
         Vec3 {
             e: [-self.e[0], -self.e[1], -self.e[2]]
         }
     }
 }
-
-impl Sub for Vec3 {
+impl Neg for Vec3 {
     type Output = Vec3;
 
-    fn sub(self, other: Self) -> Self::Output {
+    fn neg(self) -> Self::Output {
+        -&self
+    }
+}
+
+impl<'a,'b> Sub<&'b Vec3> for &'a Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, other: &'b Vec3) -> Self::Output {
         Vec3{
             e:[
                 self.e[0] - other.e[0],
@@ -101,7 +102,15 @@ impl Sub for Vec3 {
     }
 }
 
-impl Div<f64> for Vec3 {
+impl Sub for Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, other: Vec3) -> Self::Output {
+        &self - &other
+    }
+}
+
+impl<'a> Div<f64> for &'a Vec3 {
     type Output = Result<Vec3,&'static str>;
 
     fn div(self, other: f64) -> Self::Output {
@@ -118,6 +127,14 @@ impl Div<f64> for Vec3 {
                 ]
             }
         )
+    }
+}
+
+impl Div<f64> for Vec3 {
+    type Output = Result<Vec3,&'static str>;
+
+    fn div(self, other: f64) -> Self::Output {
+        &self / other
     }
 }
 
@@ -139,20 +156,14 @@ impl Mul<f64> for Vec3 {
     type Output = Vec3;
 
     fn mul(self, other: f64) -> Self::Output {
-        Vec3 {
-            e: [
-                self.e[0] * other,
-                self.e[1] * other,
-                self.e[2] * other
-            ]
-        }
+        &self * other
     }
 }
 
-impl Mul for Vec3 {
+impl<'a,'b> Mul<&'b Vec3> for &'a Vec3 {
     type Output = Vec3;
 
-    fn mul(self, other: Self) -> Self::Output {
+    fn mul(self, other:&'b Vec3) -> Self::Output {
         Vec3 {
             e: [
                 self.e[0] * other.e[0],
@@ -163,12 +174,20 @@ impl Mul for Vec3 {
     }
 }
 
-impl Div for Vec3 {
+impl Mul for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, other: Self) -> Self::Output {
+        &self * &other
+    }
+}
+
+impl<'a,'b> Div<&'b Vec3> for &'a Vec3 {
     type Output = Result<Vec3,&'static str>;
 
-    fn div(self, other: Self) -> Self::Output {
-        let Vec3 { e:[x1,y1,z1] } = self;
-        let Vec3 { e:[x2,y2,z2] } = other;
+    fn div(self, other: &'b Vec3) -> Self::Output {
+        let Vec3 { e: [x1, y1, z1] } = *self;
+        let Vec3 { e: [x2, y2, z2] } = *other;
 
         if x2 == 0.0 || y2 == 0.0 || z2 == 0.0 {
             return Err("Division by zero is not allowed")
@@ -183,6 +202,28 @@ impl Div for Vec3 {
                 ]
             }
         )
+    }
+}
+
+impl Div for Vec3 {
+    type Output = Result<Vec3,&'static str>;
+
+    fn div(self, other: Self) -> Self::Output {
+        &self / &other
+    }
+}
+
+impl Deref for Vec3 {
+    type Target = [f64];
+
+    fn deref(&self) -> &Self::Target {
+        &self.e
+    }
+}
+
+impl DerefMut for Vec3 {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.e
     }
 }
 
