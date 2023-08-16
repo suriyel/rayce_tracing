@@ -8,6 +8,6 @@ mod tests {
 
     #[test]
     fn it_works() {
-        image::print_image(256, 256);
+        image::print_image(200, 100);
     }
 }

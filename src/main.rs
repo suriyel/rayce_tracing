@@ -35,5 +35,5 @@ fn f_1(){
     let width: i32 = args[1].parse().unwrap();
     let height = args[2].parse().unwrap();
 
-    image::print_image2(width, height);
+    image::print_image(width, height);
 }
