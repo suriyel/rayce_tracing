@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Deref, DerefMut, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::io::{self, Write};
 
 #[derive(Debug)]
@@ -37,6 +37,10 @@ impl Vec3 {
 
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
+    }
+
+    pub fn unit_vector(&self)->Vec3 {
+        return (self / self.length()).unwrap();
     }
 
     pub fn write_color<W: Write>(&self, stream: &mut W) -> io::Result<()> {
@@ -110,52 +114,61 @@ impl Sub for Vec3 {
     }
 }
 
-impl<'a> Div<f64> for &'a Vec3 {
-    type Output = Result<Vec3,&'static str>;
+impl<'a, T> Div<T> for &'a Vec3
+    where T: Into<f64> + Copy
+{
+    type Output = Result<Vec3, &'static str>;
 
-    fn div(self, other: f64) -> Self::Output {
-        if other ==0.0 {
-            return Err("Division by zero is not allowed")
+    fn div(self, other: T) -> Self::Output {
+        let other_value = other.into();
+        if other_value == 0.0 {
+            return Err("Division by zero is not allowed");
         }
 
         Ok(
             Vec3 {
                 e: [
-                    self.e[0] / other,
-                    self.e[1] / other,
-                    self.e[2] / other
+                    self.e[0] / other_value,
+                    self.e[1] / other_value,
+                    self.e[2] / other_value
                 ]
             }
         )
     }
 }
 
-impl Div<f64> for Vec3 {
-    type Output = Result<Vec3,&'static str>;
+impl<T> Div<T> for Vec3
+    where T: Into<f64> + Copy
+{
+    type Output = Result<Vec3, &'static str>;
 
-    fn div(self, other: f64) -> Self::Output {
+    fn div(self, other: T) -> Self::Output {
         &self / other
     }
 }
 
-impl<'a> Mul<f64> for &'a Vec3 {
+impl<'a, T> Mul<T> for &'a Vec3
+    where T: Into<f64> + Copy
+{
     type Output = Vec3;
 
-    fn mul(self, other: f64) -> Self::Output {
-        Vec3{
-            e:[
-                self.e[0] * other,
-                self.e[1] * other,
-                self.e[2] * other
+    fn mul(self, other: T) -> Self::Output {
+        let other_value = other.into();
+        Vec3 {
+            e: [
+                self.e[0] * other_value,
+                self.e[1] * other_value,
+                self.e[2] * other_value
             ]
         }
     }
 }
 
-impl Mul<f64> for Vec3 {
+impl<T> Mul<T> for Vec3
+    where T: Into<f64> + Copy{
     type Output = Vec3;
 
-    fn mul(self, other: f64) -> Self::Output {
+    fn mul(self, other: T) -> Self::Output {
         &self * other
     }
 }
