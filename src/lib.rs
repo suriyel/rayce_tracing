@@ -1,4 +1,5 @@
 mod image;
+mod image_simple;
 mod vec3;
 mod ray;
 
@@ -8,6 +9,6 @@ mod tests {
 
     #[test]
     fn it_works() {
-        image::print_image2(400);
+        image_simple::print_image();
     }
 }
