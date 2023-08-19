@@ -18,6 +18,7 @@ pub fn print_image() {
         .expect("Failed to Write Color.");
 
     // 我会把发出射线的原点从图像的左下角开始沿着xy方向做增量直至遍历全图。注意我这里并没有将射线的向量设置为单位向量
+    // 此为光源背景，这里做成自上到下白到蓝的环境光，也可以设计为点光源、球光源
     let lower_left_corner = Vec3::new(-2.0, -1.0, -1.0);
     let horizontal = Vec3::new(4.0, 0.0, 0.0);
     let vertical = Vec3::new(0.0, 2.0, 0.0);
