@@ -1,13 +1,21 @@
 use crate::ray::Ray;
+use crate::vec3::*;
 use crate::vec3::{dot, Vec3};
 
 struct HitRecord {
     p: Vec3,
     normal: Vec3,
-    t: f64
+    t: f64,
+    front_face: bool
 }
 
 impl HitRecord {
+    pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
+        self.front_face = dot(r.get_direction(), &outward_normal) < 0.0;
+        let temp  = if self.front_face { outward_normal } else { -outward_normal };
+        self.normal = temp
+    }
+
     pub fn set_t(&mut self, value: f64) {
         self.t = value
     }
@@ -54,7 +62,7 @@ impl Sphere{
         if temp < t_max && temp > t_min {
             rec.set_t(temp);
             rec.set_p(r.at(temp));
-            rec.set_normal(((rec.get_p() - self.get_center()) / self.get_radius()).unwrap());
+            rec.set_face_normal(r, ((rec.get_p() - self.get_center()) / self.get_radius()).unwrap());
             return Some(true);
         }
         None
