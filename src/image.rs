@@ -55,9 +55,10 @@ pub fn print_image(width:i32) {
 
 pub fn ray_color(r:& Ray)->Vec3 {
     // 和(0,0,-1)小球求交集
-    if hit_sphere(&Vec3::new(0.0, 0.0, -1.0), 0.5, r) {
-        // 返回红色
-        return Vec3::new(1.0, 0.0, 0.0);
+    let t = hit_sphere(&Vec3::new(0.0, 0.0, -1.0), 0.5, r);
+    if t > 0.0 {
+        let N = r.at(t).unit_vector() - Vec3::new(0.0, 0.0, -1.0);
+        return &Vec3::new(N.x() + 1.0, N.y() + 1.0, N.z() + 1.0) * 0.5;
     }
 
     let unit_direction = r.get_direction().unit_vector();
@@ -97,13 +98,17 @@ pub fn ray_color(r:& Ray)->Vec3 {
 // }
 
 /*
-射线是否和对应球有交集
+射线是否和对应球有交集,返回1元2次方程t解
  */
-pub fn hit_sphere(center: &Vec3, radius: f64, ray: &Ray) -> bool {
+pub fn hit_sphere(center: &Vec3, radius: f64, ray: &Ray) -> f64 {
     let oc = ray.get_origin() - center;
     let a = dot(ray.get_direction(), ray.get_direction());
     let b = 2.0 * dot(&oc, ray.get_direction());
     let c = dot(&oc, &oc) - radius * radius;
     let discriminant = b * b - 4.0 * a * c;
-    return discriminant >= 0.0;
+    return if discriminant < 0.0 {
+        -1.0
+    } else {
+        (-b - discriminant.sqrt()) / (2.0 * a)
+    }
 }
