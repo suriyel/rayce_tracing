@@ -320,3 +320,20 @@ impl DivAssign<f64> for Vec3 {
         e[2] /= other;
     }
 }
+
+pub fn dot(u:&Vec3,v:&Vec3)->f64 {
+    let Vec3 { e: [x, y, z] } = *u;
+    let Vec3 { e: [x1, y1, z1] } = *v;
+
+    return x * x1 + y * y1 + z * z1;
+}
+
+pub fn cross(u:&Vec3,v:&Vec3) -> Vec3 {
+    let Vec3 { e: [x, y, z] } = *u;
+    let Vec3 { e: [x1, y1, z1] } = *v;
+
+    return Vec3::new(
+        y * z1 - z * y1,
+        z * x1 - x * z1,
+        x * y1 - y * x1);
+}

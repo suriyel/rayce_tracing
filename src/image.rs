@@ -1,9 +1,9 @@
 use std::fs::{File, remove_file};
 use std::io::Write;
 use crate::ray::Ray;
-use crate::vec3::Vec3;
+use crate::vec3::{dot, Vec3};
 
-pub fn print_image2(width:i32) {
+pub fn print_image(width:i32) {
     // Image
     let aspect_ratio = 16.0 / 9.0;
     let height = f64::floor(f64::from(width) / aspect_ratio) as i32;
@@ -54,38 +54,54 @@ pub fn print_image2(width:i32) {
 }
 
 pub fn ray_color(r:& Ray)->Vec3 {
+    if hit_sphere(&Vec3::new(0.0, 0.0, -1.0), 0.5, r) {
+        return Vec3::new(1.0, 0.0, 0.0);
+    }
+
     let unit_direction = r.get_direction().unit_vector();
     let a = (unit_direction.y() + 1.0) * 0.5;
     Vec3::new(1.0, 1.0, 1.0) * (1.0 - a) + Vec3::new(0.5, 0.7, 1.0) * a
 }
 
-pub fn print_image(width:i32, height:i32) {
-    let f_width = f64::from(width -1);
-    let f_height = f64::from(height -1);
-    if let Err(err) = remove_file("image.ppm"){
-        if err.kind() != std::io::ErrorKind::NotFound {
-            println!("{:?}", err);
-        }
-    }
-    let mut file = File::create("image.ppm")
-        .expect("Failed to create image.ppm.");
+// pub fn print_image(width:i32, height:i32) {
+//     let f_width = f64::from(width -1);
+//     let f_height = f64::from(height -1);
+//     if let Err(err) = remove_file("image.ppm"){
+//         if err.kind() != std::io::ErrorKind::NotFound {
+//             println!("{:?}", err);
+//         }
+//     }
+//     let mut file = File::create("image.ppm")
+//         .expect("Failed to create image.ppm.");
+//
+//     file.write_all(format!("P3\n{} {}\n255\n", width, height).as_bytes())
+//         .expect("Failed to Write Color.");
+//     for j in 0..height {
+//         let process = format!("Scan lines remaining: {}",height-j);
+//         dbg!(process);
+//         for i in 0..width {
+//             let color = Vec3::new(
+//                 f64::from(i) / f_width,
+//                 f64::from(j) / f_height,
+//                 0.0
+//             );
+//             color.write_color(&mut file)
+//                 .expect(&format!("Failed to Write Color:{}_{}", i, j));
+//         }
+//     }
+//
+//     let end = String::from("Done.                 ");
+//     dbg!(end);
+// }
 
-    file.write_all(format!("P3\n{} {}\n255\n", width, height).as_bytes())
-        .expect("Failed to Write Color.");
-    for j in 0..height {
-        let process = format!("Scan lines remaining: {}",height-j);
-        dbg!(process);
-        for i in 0..width {
-            let color = Vec3::new(
-                f64::from(i) / f_width,
-                f64::from(j) / f_height,
-                0.0
-            );
-            color.write_color(&mut file)
-                .expect(&format!("Failed to Write Color:{}_{}", i, j));
-        }
-    }
-
-    let end = String::from("Done.                 ");
-    dbg!(end);
+/*
+射线是否和对应球有交集
+ */
+pub fn hit_sphere(center: &Vec3, radius: f64, ray: &Ray) -> bool {
+    let oc = ray.get_origin() - center;
+    let a = dot(ray.get_direction(), ray.get_direction());
+    let b = 2.0 * dot(&oc, ray.get_direction());
+    let c = dot(&oc, &oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    return discriminant >= 0.0;
 }

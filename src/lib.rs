@@ -9,6 +9,6 @@ mod tests {
 
     #[test]
     fn it_works() {
-        image_simple::print_image();
+        image::print_image(800);
     }
 }
