@@ -2,7 +2,7 @@ use crate::ray::Ray;
 use crate::vec3::*;
 use crate::vec3::{dot, Vec3};
 
-struct HitRecord {
+pub struct HitRecord {
     p: Vec3,
     normal: Vec3,
     t: f64,
@@ -57,14 +57,14 @@ impl HitRecord {
     }
 }
 
-trait Hittable {
+pub trait Hittable {
     /*
     Sphere是否有交集
      */
     fn hit(&self,r: &Ray, t_min: f64, t_max: f64, hit_record: &mut HitRecord) -> bool;
 }
 
-struct Sphere {
+pub struct Sphere {
     cen:Vec3,
     r:f64
 }

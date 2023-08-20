@@ -2,6 +2,7 @@ use std::fs::{File, remove_file};
 use std::io::Write;
 use crate::ray::Ray;
 use crate::vec3::{dot, Vec3};
+use crate::sphere::*;
 
 pub fn print_image(width:i32) {
     // Image
@@ -53,7 +54,7 @@ pub fn print_image(width:i32) {
     }
 }
 
-pub fn ray_color(r:& Ray)->Vec3 {
+pub fn ray_color(r: &Ray, world: &Box<dyn Hittable>) -> Vec3 {
     // 和(0,0,-1)小球求交集
     let t = hit_sphere(&Vec3::new(0.0, 0.0, -1.0), 0.5, r);
     if t > 0.0 {
@@ -65,6 +66,23 @@ pub fn ray_color(r:& Ray)->Vec3 {
     let a = (unit_direction.y() + 1.0) * 0.5;
     Vec3::new(1.0, 1.0, 1.0) * (1.0 - a) + Vec3::new(0.5, 0.7, 1.0) * a
 }
+
+/*
+射线是否和对应球有交集,返回1元2次方程t解
+ */
+pub fn hit_sphere(center: &Vec3, radius: f64, ray: &Ray) -> f64 {
+    let oc = ray.get_origin() - center;
+    let a = ray.get_direction().length_squared();
+    let half_b = dot(&oc, ray.get_direction());
+    let c = oc.length_squared() - radius * radius;
+    let discriminant = half_b * half_b - a * c;
+    return if discriminant < 0.0 {
+        -1.0
+    } else {
+        (-half_b - discriminant.sqrt()) / a
+    }
+}
+
 
 // pub fn print_image(width:i32, height:i32) {
 //     let f_width = f64::from(width -1);
@@ -96,19 +114,3 @@ pub fn ray_color(r:& Ray)->Vec3 {
 //     let end = String::from("Done.                 ");
 //     dbg!(end);
 // }
-
-/*
-射线是否和对应球有交集,返回1元2次方程t解
- */
-pub fn hit_sphere(center: &Vec3, radius: f64, ray: &Ray) -> f64 {
-    let oc = ray.get_origin() - center;
-    let a = ray.get_direction().length_squared();
-    let half_b = dot(&oc, ray.get_direction());
-    let c = oc.length_squared() - radius * radius;
-    let discriminant = half_b * half_b - a * c;
-    return if discriminant < 0.0 {
-        -1.0
-    } else {
-        (-half_b - discriminant.sqrt()) / a
-    }
-}
