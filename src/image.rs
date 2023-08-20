@@ -54,7 +54,9 @@ pub fn print_image(width:i32) {
 }
 
 pub fn ray_color(r:& Ray)->Vec3 {
+    // 和(0,0,-1)小球求交集
     if hit_sphere(&Vec3::new(0.0, 0.0, -1.0), 0.5, r) {
+        // 返回红色
         return Vec3::new(1.0, 0.0, 0.0);
     }
 
