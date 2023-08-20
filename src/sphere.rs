@@ -1,0 +1,87 @@
+use crate::ray::Ray;
+use crate::vec3::{dot, Vec3};
+
+struct HitRecord {
+    p: Vec3,
+    normal: Vec3,
+    t: f64
+}
+
+impl HitRecord {
+    pub fn set_t(&mut self, value: f64) {
+        self.t = value
+    }
+
+    pub fn set_normal(&mut self, value: Vec3) {
+        self.normal = value;
+    }
+
+    pub fn set_p(&mut self, value: Vec3) {
+        self.p = value;
+    }
+
+    pub fn get_normal(&self) -> &Vec3 {
+        &self.normal
+    }
+
+    pub fn get_p(&self) -> &Vec3 {
+        &self.p
+    }
+}
+
+trait Hittable {
+    /*
+    Sphere是否有交集
+     */
+    fn hit(&self,r: &Ray, t_min: f64, t_max: f64, hit_record: &mut HitRecord) -> bool;
+}
+
+struct Sphere {
+    cen:Vec3,
+    r:f64
+}
+
+impl Sphere{
+    pub fn get_center(&self) ->&Vec3 {
+        &self.cen
+    }
+
+    pub fn get_radius(&self)->f64 {
+        self.r
+    }
+
+    fn set_record(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord, temp: f64) -> Option<bool> {
+        if temp < t_max && temp > t_min {
+            rec.set_t(temp);
+            rec.set_p(r.at(temp));
+            rec.set_normal(((rec.get_p() - self.get_center()) / self.get_radius()).unwrap());
+            return Some(true);
+        }
+        None
+    }
+}
+
+impl Hittable for Sphere {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+        let oc = r.get_origin() - self.get_center();
+        let a = r.get_direction().length_squared();
+        let half_b = dot(&oc, r.get_direction());
+        let c = oc.length_squared() - self.get_radius() * self.get_radius();
+        let discriminant = half_b * half_b - a * c;
+
+        if discriminant > 0.0 {
+            let root = discriminant.sqrt();
+            let temp = (-half_b - root) / a;
+            if let Some(value) = self.set_record(r, t_min, t_max, rec, temp) {
+                return value;
+            }
+
+            let temp = (-half_b + root) / a;
+            if let Some(value) = self.set_record(r, t_min, t_max, rec, temp) {
+                return value
+            }
+        }
+
+        return false;
+    }
+}

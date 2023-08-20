@@ -2,6 +2,7 @@ mod image;
 mod image_simple;
 mod vec3;
 mod ray;
+mod sphere;
 
 #[cfg(test)]
 mod tests {
