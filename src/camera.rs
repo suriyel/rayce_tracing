@@ -23,10 +23,9 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub const ASPECT_RATIO:f64 = 16.0 / 9.0;
-    pub fn new(width:i32)->Camera {
+    pub fn new(width:i32,aspect_ratio:f64)->Camera {
         // Image
-        let height = f64::floor(f64::from(width) / Camera::ASPECT_RATIO) as i32;
+        let height = f64::floor(f64::from(width) / aspect_ratio) as i32;
         let height = if height < 1 { 1 } else { height };
 
 
@@ -52,7 +51,7 @@ impl Camera {
         Camera {
             image_height: height,
             image_width: width,
-            aspect_ratio: Camera::ASPECT_RATIO,
+            aspect_ratio,
             center: camera_center,
             pixel00_loc,
             pixel_delta_u,
