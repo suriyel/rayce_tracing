@@ -48,8 +48,8 @@ pub fn print_image(width:i32) {
     world.add(Box::new(Sphere::new(Vec3::new(0.0,-100.5,-1.0),100.0)));
     let world_hittable:Box<dyn Hittable> = Box::new(world);
 
-    for j in 0..height {
-        println!("Scan lines remaining: {}", height - j);
+    for j in (0..height).rev() {
+        println!("Scan lines remaining: {}", j);
         for i in 0..width {
             let pixel_center = &pixel00_loc + &(&pixel_delta_u * i) + (&pixel_delta_v * j);
             let ray_direction = &pixel_center - &camera_center;
