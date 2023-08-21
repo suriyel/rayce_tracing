@@ -46,7 +46,6 @@ pub fn print_image(width:i32) {
     let mut world = HittableList::new();
     world.add(Box::new(Sphere::new(Vec3::new(0.0,0.0,-1.0),0.5)));
     world.add(Box::new(Sphere::new(Vec3::new(0.0,-100.5,-1.0),100.0)));
-    let world_hittable:&dyn Hittable = &world;
 
     for j in (0..height).rev() {
         println!("Scan lines remaining: {}", j);
@@ -55,7 +54,7 @@ pub fn print_image(width:i32) {
             let ray_direction = &pixel_center - &camera_center;
             let ray = Ray::new(&camera_center, &ray_direction);
 
-            let color = ray_color(&ray,world_hittable);
+            let color = ray_color(&ray, &world);
             color.write_color(&mut file)
                 .expect(&format!("Failed to Write Color:{}_{}", i, j));
         }
