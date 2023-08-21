@@ -4,6 +4,7 @@ mod vec3;
 mod ray;
 mod sphere;
 mod common;
+mod camera;
 
 use std::env;
 use crate::vec3::Vec3;
@@ -36,7 +37,7 @@ fn f_1(){
     let args: Vec<String> = env::args().collect();
 
     let width: i32 = args[1].parse().unwrap();
-    let height = args[2].parse().unwrap();
+    //let height = args[2].parse().unwrap();
 
-    image::print_image(width, height);
+    image::print_image(width);
 }

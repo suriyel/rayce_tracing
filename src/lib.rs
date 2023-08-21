@@ -4,6 +4,7 @@ mod vec3;
 mod ray;
 mod sphere;
 mod common;
+mod camera;
 
 #[cfg(test)]
 mod tests {
