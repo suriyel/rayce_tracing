@@ -3,7 +3,7 @@ mod image_simple;
 mod vec3;
 mod ray;
 mod sphere;
-mod const_lib;
+mod common;
 
 #[cfg(test)]
 mod tests {

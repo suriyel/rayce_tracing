@@ -3,7 +3,7 @@ use std::io::Write;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 use crate::sphere::*;
-use crate::const_lib::*;
+use crate::common::*;
 
 pub fn print_image(width:i32) {
     // Image
