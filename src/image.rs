@@ -1,8 +1,9 @@
 use std::fs::{File, remove_file};
 use std::io::Write;
 use crate::ray::Ray;
-use crate::vec3::{dot, Vec3};
+use crate::vec3::Vec3;
 use crate::sphere::*;
+use crate::const_lib::*;
 
 pub fn print_image(width:i32) {
     // Image
@@ -40,6 +41,13 @@ pub fn print_image(width:i32) {
         .expect("Failed to create image.ppm.");
     file.write_all(format!("P3\n{} {}\n255\n", width, height).as_bytes())
         .expect("Failed to Write Color.");
+
+    // sphere
+    let mut world = HittableList::new();
+    world.add(Box::new(Sphere::new(Vec3::new(0.0,0.0,-1.0),0.5)));
+    world.add(Box::new(Sphere::new(Vec3::new(0.0,-100.5,-1.0),100.0)));
+    let world_hittable:Box<dyn Hittable> = Box::new(world);
+
     for j in 0..height {
         println!("Scan lines remaining: {}", height - j);
         for i in 0..width {
@@ -47,7 +55,7 @@ pub fn print_image(width:i32) {
             let ray_direction = &pixel_center - &camera_center;
             let ray = Ray::new(&camera_center, &ray_direction);
 
-            let color = ray_color(&ray);
+            let color = ray_color(&ray,&world_hittable);
             color.write_color(&mut file)
                 .expect(&format!("Failed to Write Color:{}_{}", i, j));
         }
@@ -56,61 +64,12 @@ pub fn print_image(width:i32) {
 
 pub fn ray_color(r: &Ray, world: &Box<dyn Hittable>) -> Vec3 {
     // 和(0,0,-1)小球求交集
-    let t = hit_sphere(&Vec3::new(0.0, 0.0, -1.0), 0.5, r);
-    if t > 0.0 {
-        let N = r.at(t).unit_vector() - Vec3::new(0.0, 0.0, -1.0);
-        return &Vec3::new(N.x() + 1.0, N.y() + 1.0, N.z() + 1.0) * 0.5;
+    let mut temp_rec = HitRecord::new_default();
+    if world.hit(r,0.0,INFINITY,& mut temp_rec) {
+        return (temp_rec.get_normal() + &Vec3::new(1.0, 1.0, 1.0)) * 0.5;
     }
 
     let unit_direction = r.get_direction().unit_vector();
     let a = (unit_direction.y() + 1.0) * 0.5;
     Vec3::new(1.0, 1.0, 1.0) * (1.0 - a) + Vec3::new(0.5, 0.7, 1.0) * a
 }
-
-/*
-射线是否和对应球有交集,返回1元2次方程t解
- */
-pub fn hit_sphere(center: &Vec3, radius: f64, ray: &Ray) -> f64 {
-    let oc = ray.get_origin() - center;
-    let a = ray.get_direction().length_squared();
-    let half_b = dot(&oc, ray.get_direction());
-    let c = oc.length_squared() - radius * radius;
-    let discriminant = half_b * half_b - a * c;
-    return if discriminant < 0.0 {
-        -1.0
-    } else {
-        (-half_b - discriminant.sqrt()) / a
-    }
-}
-
-
-// pub fn print_image(width:i32, height:i32) {
-//     let f_width = f64::from(width -1);
-//     let f_height = f64::from(height -1);
-//     if let Err(err) = remove_file("image.ppm"){
-//         if err.kind() != std::io::ErrorKind::NotFound {
-//             println!("{:?}", err);
-//         }
-//     }
-//     let mut file = File::create("image.ppm")
-//         .expect("Failed to create image.ppm.");
-//
-//     file.write_all(format!("P3\n{} {}\n255\n", width, height).as_bytes())
-//         .expect("Failed to Write Color.");
-//     for j in 0..height {
-//         let process = format!("Scan lines remaining: {}",height-j);
-//         dbg!(process);
-//         for i in 0..width {
-//             let color = Vec3::new(
-//                 f64::from(i) / f_width,
-//                 f64::from(j) / f_height,
-//                 0.0
-//             );
-//             color.write_color(&mut file)
-//                 .expect(&format!("Failed to Write Color:{}_{}", i, j));
-//         }
-//     }
-//
-//     let end = String::from("Done.                 ");
-//     dbg!(end);
-// }

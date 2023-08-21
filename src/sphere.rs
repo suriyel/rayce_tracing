@@ -1,3 +1,4 @@
+use std::ops::Deref;
 use crate::ray::Ray;
 use crate::vec3::*;
 use crate::vec3::{dot, Vec3};
@@ -17,6 +18,15 @@ impl HitRecord {
             t,
             front_face
         }
+    }
+
+    pub fn new_default()->HitRecord {
+        HitRecord::new(
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(0.0, 0.0, 0.0),
+            0.0,
+            false,
+        )
     }
 
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
@@ -70,6 +80,13 @@ pub struct Sphere {
 }
 
 impl Sphere{
+    pub fn new(center:Vec3,radius:f64)->Sphere {
+        Sphere {
+            cen: center,
+            r: radius
+        }
+    }
+
     pub fn get_center(&self) ->&Vec3 {
         &self.cen
     }
@@ -114,11 +131,17 @@ impl Hittable for Sphere {
     }
 }
 
-struct HittableList {
+pub struct HittableList {
     objects: Vec<Box<dyn Hittable>>
 }
 
 impl HittableList {
+    pub fn new()->HittableList {
+        HittableList {
+            objects: Vec::new()
+        }
+    }
+
     pub fn clear(&mut self) {
         self.objects.clear()
     }
@@ -138,12 +161,7 @@ impl Hittable for HittableList {
         let mut  closest_so_far = t_max;
 
         for object in self.get_objects().into_iter() {
-            let mut temp_rec = HitRecord::new(
-                Vec3::new(0.0, 0.0, 0.0),
-                Vec3::new(0.0, 0.0, 0.0),
-                0.0,
-                false,
-            );
+            let mut temp_rec = HitRecord::new_default();
             if object.hit(r,t_min,closest_so_far,&mut temp_rec) {
                 hit_anything = true;
                 closest_so_far = temp_rec.get_t();

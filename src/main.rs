@@ -3,6 +3,7 @@ mod image_simple;
 mod vec3;
 mod ray;
 mod sphere;
+mod const_lib;
 
 use std::env;
 use crate::vec3::Vec3;
