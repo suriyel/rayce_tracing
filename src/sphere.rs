@@ -157,7 +157,7 @@ impl HittableList {
 impl Hittable for HittableList {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
         let mut hit_anything = false;
-        let mut  closest_so_far = t_max;
+        let mut closest_so_far = t_max;
 
         for object in self.get_objects().into_iter() {
             let mut temp_rec = HitRecord::new_default();
