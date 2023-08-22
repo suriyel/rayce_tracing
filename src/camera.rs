@@ -42,12 +42,12 @@ impl Camera {
         let viewport_v = Vec3::new(0.0, viewport_height, 0.0);
 
         // Calculate the horizontal and vertical delta vectors from pixel to pixel.
-        let pixel_delta_u = (viewport_u / width).unwrap();
-        let pixel_delta_v = (viewport_v / height).unwrap();
+        let pixel_delta_u = viewport_u / width;
+        let pixel_delta_v = viewport_v / height;
 
         // Calculate the location of the upper left pixel.
         let viewport_upper_left = camera_center - Vec3::new(0.0, 0.0, focal_length)
-            - (viewport_u / 2).unwrap() - (viewport_v / 2).unwrap();
+            - viewport_u / 2 - viewport_v / 2;
         let pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
         Camera {

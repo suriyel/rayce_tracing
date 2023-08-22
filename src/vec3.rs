@@ -41,7 +41,7 @@ impl Vec3 {
     }
 
     pub fn unit_vector(&self)->Vec3 {
-        return (*self / self.length()).unwrap();
+        return *self / self.length();
     }
 
     pub fn write_color<W: Write>(&self, stream: &mut W, samples_per_pixel: i32) -> io::Result<()> {
@@ -100,23 +100,17 @@ impl Sub for Vec3 {
 impl<T> Div<T> for Vec3
     where T: Into<f64> + Copy
 {
-    type Output = Result<Vec3, &'static str>;
+    type Output = Vec3;
 
     fn div(self, other: T) -> Self::Output {
         let other_value = other.into();
-        if other_value == 0.0 {
-            return Err("Division by zero is not allowed");
+        Vec3 {
+            e: [
+                self.e[0] / other_value,
+                self.e[1] / other_value,
+                self.e[2] / other_value
+            ]
         }
-
-        Ok(
-            Vec3 {
-                e: [
-                    self.e[0] / other_value,
-                    self.e[1] / other_value,
-                    self.e[2] / other_value
-                ]
-            }
-        )
     }
 }
 
@@ -151,25 +145,19 @@ impl Mul for Vec3 {
 }
 
 impl Div for Vec3 {
-    type Output = Result<Vec3,&'static str>;
+    type Output = Vec3;
 
     fn div(self, other: Self) -> Self::Output {
         let Vec3 { e: [x1, y1, z1] } = self;
         let Vec3 { e: [x2, y2, z2] } = other;
 
-        if x2 == 0.0 || y2 == 0.0 || z2 == 0.0 {
-            return Err("Division by zero is not allowed")
+        Vec3 {
+            e: [
+                x1 / x2,
+                y1 / y2,
+                z1 / z2
+            ]
         }
-
-        Ok(
-            Vec3 {
-                e: [
-                    x1 / x2,
-                    y1 / y2,
-                    z1 / z2
-                ]
-            }
-        )
     }
 }
 

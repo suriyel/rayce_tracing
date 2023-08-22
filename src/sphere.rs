@@ -98,7 +98,7 @@ impl Sphere{
         if temp < t_max && temp > t_min {
             rec.set_t(temp);
             rec.set_p(r.at(temp));
-            rec.set_face_normal(r, ((rec.get_p() - self.get_center()) / self.get_radius()).unwrap());
+            rec.set_face_normal(r, (rec.get_p() - self.get_center()) / self.get_radius());
             return Some(true);
         }
         None
