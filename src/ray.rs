@@ -1,5 +1,4 @@
 use crate::vec3::*;
-use std::rc::Rc;
 
 pub struct Ray {
     origin: Vec3,
