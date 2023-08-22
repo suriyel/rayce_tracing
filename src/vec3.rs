@@ -1,7 +1,8 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::io::{self, Write};
+use crate::common::clamp;
 
-#[derive(Debug)]
+#[derive(Debug,Copy, Clone)]
 pub struct Vec3 {
     e: [f64; 3],
 }
@@ -40,23 +41,28 @@ impl Vec3 {
     }
 
     pub fn unit_vector(&self)->Vec3 {
-        return (self / self.length()).unwrap();
+        return (*self / self.length()).unwrap();
     }
 
-    pub fn write_color<W: Write>(&self, stream: &mut W) -> io::Result<()> {
-        let num = 255.999;
+    pub fn write_color<W: Write>(&self, stream: &mut W, samples_per_pixel: i32) -> io::Result<()> {
+        let scala = 1.0 / f64::from(samples_per_pixel);
+        let r = scala * self.e[0];
+        let g = scala * self.e[1];
+        let b = scala * self.e[2];
+
         let msg = format!("{} {} {}\n",
-                          (num * self.e[0]) as i32,
-                          (num * self.e[1]) as i32,
-                          (num * self.e[2]) as i32);
+                          (256.0 * clamp(r,0.0,0.999)) as i32,
+                          (256.0 * clamp(g,0.0,0.999)) as i32,
+                          (256.0 * clamp(b,0.0,0.999)) as i32);
         stream.write_all(msg.as_bytes())?;
         Ok(())
     }
 }
-impl<'a,'b> Add<&'b Vec3> for &'a Vec3 {
+
+impl Add for Vec3 {
     type Output = Vec3;
 
-    fn add(self, other: &'b Vec3) -> Self::Output {
+    fn add(self, other: Vec3) -> Self::Output {
         Vec3 {
             e: [
                 self.e[0] + other.e[0],
@@ -67,35 +73,20 @@ impl<'a,'b> Add<&'b Vec3> for &'a Vec3 {
     }
 }
 
-impl Add for Vec3 {
+impl Neg for Vec3 {
     type Output = Vec3;
 
-    fn add(self, other: Vec3) -> Self::Output {
-        &self + &other
-    }
-}
-
-impl<'a> Neg for &'a Vec3 {
-    type Output = Vec3;
-
-    fn neg(self) -> Vec3 {
+    fn neg(self) -> Self::Output {
         Vec3 {
             e: [-self.e[0], -self.e[1], -self.e[2]]
         }
     }
 }
-impl Neg for Vec3 {
+
+impl Sub for Vec3 {
     type Output = Vec3;
 
-    fn neg(self) -> Self::Output {
-        -&self
-    }
-}
-
-impl<'a,'b> Sub<&'b Vec3> for &'a Vec3 {
-    type Output = Vec3;
-
-    fn sub(self, other: &'b Vec3) -> Self::Output {
+    fn sub(self, other: Vec3) -> Self::Output {
         Vec3{
             e:[
                 self.e[0] - other.e[0],
@@ -106,15 +97,7 @@ impl<'a,'b> Sub<&'b Vec3> for &'a Vec3 {
     }
 }
 
-impl Sub for Vec3 {
-    type Output = Vec3;
-
-    fn sub(self, other: Vec3) -> Self::Output {
-        &self - &other
-    }
-}
-
-impl<'a, T> Div<T> for &'a Vec3
+impl<T> Div<T> for Vec3
     where T: Into<f64> + Copy
 {
     type Output = Result<Vec3, &'static str>;
@@ -137,19 +120,8 @@ impl<'a, T> Div<T> for &'a Vec3
     }
 }
 
-impl<T> Div<T> for Vec3
-    where T: Into<f64> + Copy
-{
-    type Output = Result<Vec3, &'static str>;
-
-    fn div(self, other: T) -> Self::Output {
-        &self / other
-    }
-}
-
-impl<'a, T> Mul<T> for &'a Vec3
-    where T: Into<f64> + Copy
-{
+impl<T> Mul<T> for Vec3
+    where T: Into<f64> + Copy{
     type Output = Vec3;
 
     fn mul(self, other: T) -> Self::Output {
@@ -164,19 +136,10 @@ impl<'a, T> Mul<T> for &'a Vec3
     }
 }
 
-impl<T> Mul<T> for Vec3
-    where T: Into<f64> + Copy{
+impl Mul for Vec3 {
     type Output = Vec3;
 
-    fn mul(self, other: T) -> Self::Output {
-        &self * other
-    }
-}
-
-impl<'a,'b> Mul<&'b Vec3> for &'a Vec3 {
-    type Output = Vec3;
-
-    fn mul(self, other:&'b Vec3) -> Self::Output {
+    fn mul(self, other: Self) -> Self::Output {
         Vec3 {
             e: [
                 self.e[0] * other.e[0],
@@ -187,20 +150,12 @@ impl<'a,'b> Mul<&'b Vec3> for &'a Vec3 {
     }
 }
 
-impl Mul for Vec3 {
-    type Output = Vec3;
-
-    fn mul(self, other: Self) -> Self::Output {
-        &self * &other
-    }
-}
-
-impl<'a,'b> Div<&'b Vec3> for &'a Vec3 {
+impl Div for Vec3 {
     type Output = Result<Vec3,&'static str>;
 
-    fn div(self, other: &'b Vec3) -> Self::Output {
-        let Vec3 { e: [x1, y1, z1] } = *self;
-        let Vec3 { e: [x2, y2, z2] } = *other;
+    fn div(self, other: Self) -> Self::Output {
+        let Vec3 { e: [x1, y1, z1] } = self;
+        let Vec3 { e: [x2, y2, z2] } = other;
 
         if x2 == 0.0 || y2 == 0.0 || z2 == 0.0 {
             return Err("Division by zero is not allowed")
@@ -218,28 +173,14 @@ impl<'a,'b> Div<&'b Vec3> for &'a Vec3 {
     }
 }
 
-impl Div for Vec3 {
-    type Output = Result<Vec3,&'static str>;
-
-    fn div(self, other: Self) -> Self::Output {
-        &self / &other
-    }
-}
-
-impl<'a> AddAssign<&'a Vec3> for Vec3 {
-    fn add_assign(&mut self, other: &'a Vec3) {
+impl AddAssign for Vec3 {
+    fn add_assign(&mut self, other: Self) {
         let Vec3 { e } = self;
-        let Vec3 { e:[x,y,z]} = *other;
+        let Vec3 { e:[x,y,z]} = other;
 
         e[0] += x;
         e[1] += y;
         e[2] += z;
-    }
-}
-
-impl AddAssign for Vec3 {
-    fn add_assign(&mut self, other: Self) {
-        (*self) += &other;
     }
 }
 
@@ -252,20 +193,14 @@ impl AddAssign<f64> for Vec3 {
     }
 }
 
-impl<'a> SubAssign<&'a Vec3> for Vec3 {
-    fn sub_assign(&mut self, other: &'a Vec3) {
+impl SubAssign for Vec3 {
+    fn sub_assign(&mut self, other: Self) {
         let Vec3 { e } = self;
-        let Vec3 {e:[x,y,z]} = *other;
+        let Vec3 {e:[x,y,z]} = other;
 
         e[0] -= x;
         e[1] -= y;
         e[2] -= z;
-    }
-}
-
-impl SubAssign for Vec3 {
-    fn sub_assign(&mut self, other: Self) {
-        (*self) -= &other;
     }
 }
 
@@ -321,16 +256,16 @@ impl DivAssign<f64> for Vec3 {
     }
 }
 
-pub fn dot(u:&Vec3,v:&Vec3)->f64 {
-    let Vec3 { e: [x, y, z] } = *u;
-    let Vec3 { e: [x1, y1, z1] } = *v;
+pub fn dot(u:Vec3,v:Vec3)->f64 {
+    let Vec3 { e: [x, y, z] } = u;
+    let Vec3 { e: [x1, y1, z1] } = v;
 
     return x * x1 + y * y1 + z * z1;
 }
 
-pub fn cross(u:&Vec3,v:&Vec3) -> Vec3 {
-    let Vec3 { e: [x, y, z] } = *u;
-    let Vec3 { e: [x1, y1, z1] } = *v;
+pub fn cross(u:Vec3,v:Vec3) -> Vec3 {
+    let Vec3 { e: [x, y, z] } = u;
+    let Vec3 { e: [x1, y1, z1] } = v;
 
     return Vec3::new(
         y * z1 - z * y1,

@@ -1,4 +1,3 @@
-use std::ops::Deref;
 use crate::ray::Ray;
 use crate::vec3::*;
 use crate::vec3::{dot, Vec3};
@@ -30,7 +29,7 @@ impl HitRecord {
     }
 
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
-        self.front_face = dot(r.get_direction(), &outward_normal) < 0.0;
+        self.front_face = dot(r.get_direction(), outward_normal) < 0.0;
         let temp  = if self.front_face { outward_normal } else { -outward_normal };
         self.normal = temp
     }
@@ -54,12 +53,12 @@ impl HitRecord {
         self.p = value;
     }
 
-    pub fn get_normal(&self) -> &Vec3 {
-        &self.normal
+    pub fn get_normal(&self) -> Vec3 {
+        self.normal
     }
 
-    pub fn get_p(&self) -> &Vec3 {
-        &self.p
+    pub fn get_p(&self) -> Vec3 {
+        self.p
     }
 
     pub fn get_t(&self)->f64 {
@@ -87,8 +86,8 @@ impl Sphere{
         }
     }
 
-    pub fn get_center(&self) ->&Vec3 {
-        &self.cen
+    pub fn get_center(&self) ->Vec3 {
+        self.cen
     }
 
     pub fn get_radius(&self)->f64 {
@@ -110,7 +109,7 @@ impl Hittable for Sphere {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
         let oc = r.get_origin() - self.get_center();
         let a = r.get_direction().length_squared();
-        let half_b = dot(&oc, r.get_direction());
+        let half_b = dot(oc, r.get_direction());
         let c = oc.length_squared() - self.get_radius() * self.get_radius();
         let discriminant = half_b * half_b - a * c;
 
