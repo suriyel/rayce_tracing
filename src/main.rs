@@ -19,7 +19,7 @@ fn main() {
 fn f_3() {
     let mut v1 = Vec3::new(1.0, 1.0, 1.0);
     let v2 = Vec3::new(1.0, 1.0, 1.0);
-    v1 += &v2;
+    v1 += v2;
     println!("{:?}", v1);
 }
 
