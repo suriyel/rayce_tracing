@@ -1,6 +1,7 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::io::{self, Write};
-use crate::common::clamp;
+use crate::common;
+use crate::common::*;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3 {
@@ -13,6 +14,25 @@ impl Vec3 {
             e: [x, y, z]
         }
     }
+
+    pub fn random() -> Vec3 {
+        Vec3 {
+            e: [get_random_double(),
+                get_random_double(),
+                get_random_double()]
+        }
+    }
+
+    pub fn random_in_range(min: f64, max: f64) -> Vec3 {
+        Vec3 {
+            e: [
+                random_double(min, max),
+                random_double(min, max),
+                random_double(min, max)
+            ]
+        }
+    }
+
     pub fn x(&self) -> f64 {
         self.e[0]
     }
@@ -42,6 +62,15 @@ impl Vec3 {
 
     pub fn unit_vector(&self)->Vec3 {
         return *self / self.length();
+    }
+
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let p = Vec3::random_in_range(-1.0, 1.0);
+            if p.length_squared() < 1.0 {
+                return p;
+            }
+        }
     }
 
     pub fn write_color<W: Write>(&self, stream: &mut W, samples_per_pixel: i32) -> io::Result<()> {
@@ -241,6 +270,15 @@ impl DivAssign<f64> for Vec3 {
         e[0] /= other;
         e[1] /= other;
         e[2] /= other;
+    }
+}
+
+impl PartialEq for Vec3 {
+    fn eq(&self, other: &Self) -> bool {
+        if self.x() == other.x() && self.y() == other.y() && self.z() == other.z() {
+            return true
+        }
+        return  false
     }
 }
 

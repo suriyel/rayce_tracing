@@ -14,13 +14,15 @@ pub struct Camera {
     aspect_ratio:f64,
     // 抽样
     samples_per_pixel:i32,
-    // Camera center
+    // 反射递归层数
+    max_depth:i32,
+    // 相机中心点(0,0,0)
     center: Vec3,
-    // Location of pixel 0, 0
+    // 视窗原点(0,0,-1),右手系规范,Y轴向上,X轴向右,摄像机看向方向为Z轴负方向
     pixel00_loc: Vec3,
-    // Offset to pixel to the right
+    // 视窗向右(X轴)偏移单位向量，例如视窗宽度为2，width 800,单位向量为 (2/800,0,0)
     pixel_delta_u: Vec3,
-    // Offset to pixel below
+    // 视窗向下(Y轴)偏移单位向量，例如视窗高度为1，height 600，单位向量为 (0,1/600,0)
     pixel_delta_v: Vec3
 }
 
@@ -32,9 +34,9 @@ impl Camera {
 
 
         // Camera
-        let focal_length = 1.0;
-        let viewport_height = 2.0;
-        let viewport_width = viewport_height * (f64::from(width) / f64::from(height));
+        let focal_length = 1.0; // Camera焦距
+        let viewport_height = 2.0; //视窗高度
+        let viewport_width = viewport_height * (f64::from(width) / f64::from(height)); //视窗宽度
         let camera_center = Vec3::new(0.0, 0.0, 0.0);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
@@ -48,6 +50,14 @@ impl Camera {
         // Calculate the location of the upper left pixel.
         let viewport_upper_left = camera_center - Vec3::new(0.0, 0.0, focal_length)
             - viewport_u / 2 - viewport_v / 2;
+        //  Q     ->△u
+        //    P . . . . . .
+        // ↓  . . . . . . .
+        // △v . . . . . . .
+        //    . . . C . . .
+        //    . . . . . . .
+        //    . . . . . . .
+        // pixel00即是图中C点，P为(0,0)，所以x、y、z都是负数
         let pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
         Camera {
@@ -55,6 +65,7 @@ impl Camera {
             image_width: width,
             aspect_ratio,
             samples_per_pixel,
+            max_depth: 50,
             center: camera_center,
             pixel00_loc,
             pixel_delta_u,
@@ -80,7 +91,7 @@ impl Camera {
                 let mut temp_color = Vec3::new(0.0, 0.0, 0.0);
                 for s in 0..self.samples_per_pixel {
                     let r = self.get_ray(i, j);
-                    temp_color += self.ray_color(&r, world);
+                    temp_color += self.ray_color(&r, world, self.max_depth);
                 }
                 temp_color.write_color(&mut file, self.samples_per_pixel)
                     .expect(&format!("Failed to Write Color:{}_{}", i, j));
@@ -105,11 +116,22 @@ impl Camera {
         return self.pixel_delta_u * px + self.pixel_delta_v * py;
     }
 
-    pub fn ray_color(&self, r: &Ray, world: &dyn Hittable) -> Vec3 {
+    pub fn ray_color(&self, r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
+        if depth <= 0 {
+            // 达到反射层数上线，返回黑色（也可返回红色看看哪里不停的散射）
+            return Vec3::new(1.0, 0.0, 0.0);
+        }
+        
         // 和(0,0,-1)小球求交集
         let mut temp_rec = HitRecord::new_default();
         if world.hit(r,0.0,INFINITY,& mut temp_rec) {
-            return (temp_rec.get_normal() + Vec3::new(1.0, 1.0, 1.0)) * 0.5;
+            let target = temp_rec.get_p() + temp_rec.get_normal() + Vec3::random_in_unit_sphere();
+            let ray = Ray::new(temp_rec.get_p(), target - temp_rec.get_p());
+            let color = self.ray_color(&ray, world, depth - 1);
+            if color == Vec3::new(1.0, 0.0, 0.0) {
+                return color;
+            }
+            return color * 0.5;
         }
 
         let unit_direction = r.get_direction().unit_vector();

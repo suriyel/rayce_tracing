@@ -2,11 +2,14 @@ use crate::ray::Ray;
 use crate::vec3::*;
 use crate::vec3::{dot, Vec3};
 
+/*
+表面材质信息
+ */
 pub struct HitRecord {
-    p: Vec3,
-    normal: Vec3,
-    t: f64,
-    front_face: bool
+    p: Vec3, // 入射点
+    normal: Vec3, // 入射点指向圆心的法向量
+    t: f64, // 相交解(此处为圆和Ray二元一次 x0、x1)
+    front_face: bool // 入射角方向判断
 }
 
 impl HitRecord {
@@ -115,6 +118,7 @@ impl Hittable for Sphere {
 
         if discriminant > 0.0 {
             let root = discriminant.sqrt();
+            // 圆和射线交叠判定，二元一次方程两组解
             let temp = (-half_b - root) / a;
             if let Some(value) = self.set_record(r, t_min, t_max, rec, temp) {
                 return value;
