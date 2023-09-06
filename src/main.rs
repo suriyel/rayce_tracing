@@ -4,6 +4,7 @@ mod ray;
 mod sphere;
 mod common;
 mod camera;
+mod material;
 
 use std::env;
 use crate::vec3::Vec3;

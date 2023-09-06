@@ -4,6 +4,7 @@ mod ray;
 mod sphere;
 mod common;
 mod camera;
+mod material;
 
 #[cfg(test)]
 mod tests {

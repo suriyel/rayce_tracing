@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::fs::{File, remove_file};
 use std::io::Write;
 use crate::common::{get_random_double, INFINITY};
@@ -125,10 +126,14 @@ impl Camera {
         // 和(0,0,-1)小球求交集
         let mut temp_rec = HitRecord::new_default();
         // 防止阴影痤疮(shadow ance)，在接近t=0时会再次击中自己
-        if world.hit(r,0.001,INFINITY,& mut temp_rec) {
-            let target = temp_rec.get_p() + temp_rec.get_normal().random_in_hemisphere();
-            let ray = Ray::new(temp_rec.get_p(), target - temp_rec.get_p());
-            return self.ray_color(&ray, world, depth - 1) * 0.5;
+        if world.hit(r,0.001,INFINITY,&mut temp_rec) {
+            let mut scattered = Ray::new_default();
+            let mut attenuation = Vec3::new_default();
+            if temp_rec.get_material().scatter(r, &temp_rec, &mut attenuation, &mut scattered) {
+                return attenuation * self.ray_color(&scattered, world, depth - 1);
+            }
+
+            return Vec3::new(0.0, 0.0, 0.0);
         }
 
         let unit_direction = r.get_direction().unit_vector();

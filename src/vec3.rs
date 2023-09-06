@@ -15,6 +15,10 @@ impl Vec3 {
         }
     }
 
+    pub fn new_default() -> Vec3 {
+        Vec3::new(0.0, 0.0, 0.0)
+    }
+
     pub fn random() -> Vec3 {
         Vec3 {
             e: [get_random_double(),
@@ -31,6 +35,12 @@ impl Vec3 {
                 random_double(min, max)
             ]
         }
+    }
+
+    pub fn copy(&mut self, other: Vec3) {
+        self.e[0] = other.e[0];
+        self.e[1] = other.e[1];
+        self.e[2] = other.e[2];
     }
 
     pub fn x(&self) -> f64 {
@@ -96,6 +106,10 @@ impl Vec3 {
                           (256.0 * clamp(b,0.0,0.999)) as i32);
         stream.write_all(msg.as_bytes())?;
         Ok(())
+    }
+
+    pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+        return v - n * (dot(v, n) * 2.0);
     }
 }
 

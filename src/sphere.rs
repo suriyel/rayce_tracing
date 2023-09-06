@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+use crate::material::{Lambertian, Material};
 use crate::ray::Ray;
 use crate::vec3::*;
 use crate::vec3::{dot, Vec3};
@@ -6,19 +9,26 @@ use crate::vec3::{dot, Vec3};
 表面材质信息
  */
 pub struct HitRecord {
-    p: Vec3, // 入射点
-    normal: Vec3, // 入射点指向圆心的法向量
-    t: f64, // 相交解(此处为圆和Ray二元一次 x0、x1)
-    front_face: bool // 入射角方向判断
+    // 入射点
+    p: Vec3,
+    // 入射点指向圆心的法向量
+    normal: Vec3,
+    // 材质引用
+    material: Rc<dyn Material>,
+    // 相交解(此处为圆和Ray二元一次 x0、x1)
+    t: f64,
+    // 入射角方向判断
+    front_face: bool
 }
 
 impl HitRecord {
-    pub fn new(p:Vec3,normal:Vec3,t:f64,front_face:bool)->HitRecord {
+    pub fn new(p: Vec3, normal: Vec3, t: f64, front_face: bool, material: Rc<dyn Material>) -> HitRecord {
         HitRecord {
             p,
             normal,
             t,
-            front_face
+            front_face,
+            material,
         }
     }
 
@@ -28,6 +38,7 @@ impl HitRecord {
             Vec3::new(0.0, 0.0, 0.0),
             0.0,
             false,
+            Rc::new(Lambertian::new(Vec3::new(0.0, 0.0, 0.0)))
         )
     }
 
@@ -67,25 +78,31 @@ impl HitRecord {
     pub fn get_t(&self)->f64 {
         self.t
     }
+
+    pub fn get_material(&self)-> &Rc<dyn Material> {
+        &self.material
+    }
 }
 
 pub trait Hittable {
     /*
     Sphere是否有交集
      */
-    fn hit(&self,r: &Ray, t_min: f64, t_max: f64, hit_record: &mut HitRecord) -> bool;
+    fn hit(&self,r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
 }
 
 pub struct Sphere {
     cen:Vec3,
-    r:f64
+    r:f64,
+    material:Rc<dyn Material>,
 }
 
 impl Sphere{
-    pub fn new(center:Vec3,radius:f64)->Sphere {
+    pub fn new(center:Vec3,radius:f64,material:Rc<dyn Material>)->Sphere {
         Sphere {
             cen: center,
-            r: radius
+            r: radius,
+            material
         }
     }
 
@@ -102,6 +119,7 @@ impl Sphere{
             rec.set_t(temp);
             rec.set_p(r.at(temp));
             rec.set_face_normal(r, (rec.get_p() - self.get_center()) / self.get_radius());
+            rec.material = self.material.clone();
             return Some(true);
         }
         None
@@ -164,11 +182,9 @@ impl Hittable for HittableList {
         let mut closest_so_far = t_max;
 
         for object in self.get_objects().into_iter() {
-            let mut temp_rec = HitRecord::new_default();
-            if object.hit(r,t_min,closest_so_far,&mut temp_rec) {
+            if object.hit(r,t_min,closest_so_far,rec) {
                 hit_anything = true;
-                closest_so_far = temp_rec.get_t();
-                rec.copy_from_rec(temp_rec);
+                closest_so_far = rec.get_t();
             }
         }
 

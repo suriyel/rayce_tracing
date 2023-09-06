@@ -14,6 +14,18 @@ impl Ray {
         }
     }
 
+    pub fn new_default() -> Ray {
+        Ray::new(
+            Vec3::new_default(),
+            Vec3::new_default()
+        )
+    }
+
+    pub fn copy(&mut self, other: Ray) {
+        self.origin = other.origin;
+        self.direction = other.direction;
+    }
+
     pub fn get_origin(&self) -> Vec3 {
         return self.origin;
     }
