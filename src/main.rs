@@ -10,10 +10,7 @@ use crate::vec3::Vec3;
 use crate::ray::*;
 
 fn main() {
-    let mut v1 = Vec3::new(1.0, 1.0, 1.0);
-    let v2 = Vec3::new(1.0, 1.0, 1.0);
-    v1 -= v2;
-    println!("{:?}", v1);
+    f_1()
 }
 
 fn f_3() {

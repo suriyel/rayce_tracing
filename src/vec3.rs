@@ -65,19 +65,30 @@ impl Vec3 {
     }
 
     pub fn random_in_unit_sphere() -> Vec3 {
-        loop {
-            let p = Vec3::random_in_range(-1.0, 1.0);
-            if p.length_squared() < 1.0 {
-                return p;
-            }
+        // lambertian分布率系数应该为cosφ
+        let a = random_double(0.0, PI * 2.0);
+        let z = random_double(-1.0, 1.0);
+        let r = (1.0 - z * z).sqrt();
+        Vec3::new(r * a.cos(), r * a.sin(), z)
+    }
+
+    /*
+    半球面反射
+    */
+    pub fn random_in_hemisphere(&self) -> Vec3 {
+        let in_unit_sphere = Vec3::random_in_unit_sphere();
+        if dot(in_unit_sphere, *self) > 0.0 {
+            return in_unit_sphere;
         }
+        return -in_unit_sphere;
     }
 
     pub fn write_color<W: Write>(&self, stream: &mut W, samples_per_pixel: i32) -> io::Result<()> {
         let scala = 1.0 / f64::from(samples_per_pixel);
-        let r = scala * self.e[0];
-        let g = scala * self.e[1];
-        let b = scala * self.e[2];
+        // 进行gamma校正，采用最简单的开平方根方式
+        let r = (scala * self.e[0]).sqrt();
+        let g = (scala * self.e[1]).sqrt();
+        let b = (scala * self.e[2]).sqrt();
 
         let msg = format!("{} {} {}\n",
                           (256.0 * clamp(r,0.0,0.999)) as i32,

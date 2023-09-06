@@ -118,20 +118,17 @@ impl Camera {
 
     pub fn ray_color(&self, r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
         if depth <= 0 {
-            // 达到反射层数上线，返回黑色（也可返回红色看看哪里不停的散射）
-            return Vec3::new(1.0, 0.0, 0.0);
+            // 达到反射层数上线，返回黑色（也可返回红色看看哪里不停的散射，但每层都需要返回红色）
+            return Vec3::new(0.0, 0.0, 0.0);
         }
         
         // 和(0,0,-1)小球求交集
         let mut temp_rec = HitRecord::new_default();
-        if world.hit(r,0.0,INFINITY,& mut temp_rec) {
-            let target = temp_rec.get_p() + temp_rec.get_normal() + Vec3::random_in_unit_sphere();
+        // 防止阴影痤疮(shadow ance)，在接近t=0时会再次击中自己
+        if world.hit(r,0.001,INFINITY,& mut temp_rec) {
+            let target = temp_rec.get_p() + temp_rec.get_normal().random_in_hemisphere();
             let ray = Ray::new(temp_rec.get_p(), target - temp_rec.get_p());
-            let color = self.ray_color(&ray, world, depth - 1);
-            if color == Vec3::new(1.0, 0.0, 0.0) {
-                return color;
-            }
-            return color * 0.5;
+            return self.ray_color(&ray, world, depth - 1) * 0.5;
         }
 
         let unit_direction = r.get_direction().unit_vector();
