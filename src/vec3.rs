@@ -107,10 +107,6 @@ impl Vec3 {
         stream.write_all(msg.as_bytes())?;
         Ok(())
     }
-
-    pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
-        return v - n * (dot(v, n) * 2.0);
-    }
 }
 
 impl Add for Vec3 {

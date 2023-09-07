@@ -82,6 +82,10 @@ impl HitRecord {
     pub fn get_material(&self)-> &Rc<dyn Material> {
         &self.material
     }
+
+    pub fn get_front_face(&self)->bool {
+        self.front_face
+    }
 }
 
 pub trait Hittable {
