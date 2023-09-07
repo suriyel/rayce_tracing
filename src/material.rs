@@ -1,4 +1,4 @@
-use crate::common::{ff_min, random_double};
+use crate::common::{ff_min, get_random_double, random_double};
 use crate::ray::Ray;
 use crate::sphere::HitRecord;
 use crate::vec3::{dot, Vec3};
@@ -77,9 +77,16 @@ impl Material for Dielectric {
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
         if etai_over_etat * sin_theta > 1.0 {
             // 反射
-            let refracted = Vec3::reflect(unit_direction, hit_record.get_normal());
-            scattered.copy(Ray::new(hit_record.get_p(), refracted));
+            let reflected = Vec3::reflect(unit_direction, hit_record.get_normal());
+            scattered.copy(Ray::new(hit_record.get_p(), reflected));
             return true;
+        }
+
+        // Christophe Schlick
+        let reflect_prob = Vec3::schlick(cos_theta,etai_over_etat);
+        if get_random_double() < reflect_prob {
+            let reflected = Vec3::reflect(unit_direction, hit_record.get_normal());
+            scattered.copy(Ray::new(hit_record.get_p(), reflected));
         }
 
         // 折射
