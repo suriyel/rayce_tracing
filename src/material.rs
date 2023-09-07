@@ -1,4 +1,4 @@
-use crate::common::random_double;
+use crate::common::{ff_min, random_double};
 use crate::ray::Ray;
 use crate::sphere::HitRecord;
 use crate::vec3::{dot, Vec3};
@@ -40,15 +40,11 @@ impl Metal {
             fuzz: if f < 1.0 { f } else { 1.0 },
         }
     }
-
-    pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
-        return v - n * (dot(v, n) * 2.0);
-    }
 }
 
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, hit_record: &HitRecord, attenuation: &mut Vec3, scattered: &mut Ray) -> bool {
-        let reflected = Metal::reflect(r_in.get_direction().unit_vector(), hit_record.get_normal());
+        let reflected = Vec3::reflect(r_in.get_direction().unit_vector(), hit_record.get_normal());
         scattered.copy(Ray::new(hit_record.get_p(), reflected + Vec3::random_in_unit_sphere() * self.fuzz));
         attenuation.copy(self.albedo);
         dot(scattered.get_direction(), hit_record.get_normal()) > 0.0
@@ -65,13 +61,6 @@ impl Dielectric {
             ri
         }
     }
-
-    pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
-        let cos_theta = dot(-uv, n);
-        let r_out_parallel = (uv + n * cos_theta) * etai_over_etat;
-        let r_out_perp = n * (-(1.0 - r_out_parallel.length_squared()).sqrt());
-        return r_out_parallel + r_out_perp;
-    }
 }
 
 impl Material for Dielectric {
@@ -84,7 +73,17 @@ impl Material for Dielectric {
         };
 
         let unit_direction = r_in.get_direction().unit_vector();
-        let refracted = Dielectric::refract(unit_direction, hit_record.get_normal(), etai_over_etat);
+        let cos_theta = ff_min(dot(-unit_direction, hit_record.get_normal()), 1.0);
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+        if etai_over_etat * sin_theta > 1.0 {
+            // 反射
+            let refracted = Vec3::reflect(unit_direction, hit_record.get_normal());
+            scattered.copy(Ray::new(hit_record.get_p(), refracted));
+            return true;
+        }
+
+        // 折射
+        let refracted = Vec3::refract(unit_direction, hit_record.get_normal(), etai_over_etat);
         scattered.copy(Ray::new(hit_record.get_p(), refracted));
         true
     }

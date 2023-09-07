@@ -107,6 +107,17 @@ impl Vec3 {
         stream.write_all(msg.as_bytes())?;
         Ok(())
     }
+
+    pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
+        let cos_theta = dot(-uv, n);
+        let r_out_parallel = (uv + n * cos_theta) * etai_over_etat;
+        let r_out_perp = n * (-(1.0 - r_out_parallel.length_squared()).sqrt());
+        return r_out_parallel + r_out_perp;
+    }
+
+    pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+        return v - n * (dot(v, n) * 2.0);
+    }
 }
 
 impl Add for Vec3 {
