@@ -1,7 +1,8 @@
 use std::cell::RefCell;
+use std::env::var;
 use std::fs::{File, remove_file};
 use std::io::Write;
-use crate::common::{get_random_double, INFINITY};
+use crate::common::{degrees_to_radians, get_random_double, INFINITY};
 use crate::ray::Ray;
 use crate::sphere::{HitRecord, Hittable};
 use crate::vec3::Vec3;
@@ -11,6 +12,8 @@ pub struct Camera {
     image_width: i32,
     // Rendered image height
     image_height: i32,
+    // 视角 (广角，影响viewport_height与viewport_width)
+    vfov:f64,
     // Ratio of image width over height
     aspect_ratio:f64,
     // 抽样
@@ -28,21 +31,22 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(width:i32,aspect_ratio:f64,samples_per_pixel:i32)->Camera {
+    pub fn new(width: i32, vfov: f64, aspect_ratio: f64, samples_per_pixel: i32) -> Camera {
         // Image
         let height = f64::floor(f64::from(width) / aspect_ratio) as i32;
         let height = if height < 1 { 1 } else { height };
 
 
         // Camera
-        let focal_length = 1.0; // Camera焦距
-        let viewport_height = 2.0; //视窗高度
+        let focal_length = 1.0; // Camera焦距 Z轴
+        let theta = degrees_to_radians(vfov);
+        let viewport_height = 2.0 * (theta/2.0).tan() * focal_length; //视窗高度
         let viewport_width = viewport_height * (f64::from(width) / f64::from(height)); //视窗宽度
         let camera_center = Vec3::new(0.0, 0.0, 0.0);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
         let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3::new(0.0, viewport_height, 0.0);
+        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
 
         // Calculate the horizontal and vertical delta vectors from pixel to pixel.
         let pixel_delta_u = viewport_u / width;
@@ -64,6 +68,7 @@ impl Camera {
         Camera {
             image_height: height,
             image_width: width,
+            vfov,
             aspect_ratio,
             samples_per_pixel,
             max_depth: 50,
