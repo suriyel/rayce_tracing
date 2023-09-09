@@ -1,5 +1,3 @@
-use std::cell::RefCell;
-use std::env::var;
 use std::fs::{File, remove_file};
 use std::io::Write;
 use crate::common::{degrees_to_radians, get_random_double, INFINITY};
@@ -10,16 +8,16 @@ use crate::vec3::Vec3;
 pub struct Camera {
     // Rendered image width
     image_width: i32,
+    // 视角 (广角，影响viewport_height与viewport_width)
+    vfov: f64,
+    // Ratio of image width over height
+    aspect_ratio: f64,
+    // 抽样
+    samples_per_pixel: i32,
+    // 反射递归层数
+    max_depth: i32,
     // Rendered image height
     image_height: i32,
-    // 视角 (广角，影响viewport_height与viewport_width)
-    vfov:f64,
-    // Ratio of image width over height
-    aspect_ratio:f64,
-    // 抽样
-    samples_per_pixel:i32,
-    // 反射递归层数
-    max_depth:i32,
     // 相机中心点(0,0,0)
     center: Vec3,
     // 视窗原点(0,0,-1),右手系规范,Y轴向上,X轴向右,摄像机看向方向为Z轴负方向
@@ -27,21 +25,46 @@ pub struct Camera {
     // 视窗向右(X轴)偏移单位向量，例如视窗宽度为2，width 800,单位向量为 (2/800,0,0)
     pixel_delta_u: Vec3,
     // 视窗向下(Y轴)偏移单位向量，例如视窗高度为1，height 600，单位向量为 (0,1/600,0)
-    pixel_delta_v: Vec3
+    pixel_delta_v: Vec3,
+    // Camera出发视角
+    look_from: Vec3,
+    // Camera看向视角
+    look_at: Vec3,
+    // Camera相对up方向向量
+    vup: Vec3
 }
 
 impl Camera {
     pub fn new(width: i32, vfov: f64, aspect_ratio: f64, samples_per_pixel: i32) -> Camera {
+        Camera {
+            image_width: width,
+            vfov,
+            aspect_ratio,
+            samples_per_pixel,
+            max_depth: 50,
+            // Default
+            image_height: 0,
+            center: Vec3::default(),
+            pixel00_loc: Vec3::default(),
+            pixel_delta_u: Vec3::default(),
+            pixel_delta_v: Vec3::default(),
+            look_from: Vec3::default(),
+            look_at: Vec3::default(),
+            vup: Vec3::default()
+        }
+    }
+
+    fn initialize(&self) {
         // Image
-        let height = f64::floor(f64::from(width) / aspect_ratio) as i32;
+        let height = f64::floor(f64::from(self.image_width) / self.aspect_ratio) as i32;
         let height = if height < 1 { 1 } else { height };
 
 
         // Camera
         let focal_length = 1.0; // Camera焦距 Z轴
-        let theta = degrees_to_radians(vfov);
+        let theta = degrees_to_radians(self.vfov);
         let viewport_height = 2.0 * (theta/2.0).tan() * focal_length; //视窗高度
-        let viewport_width = viewport_height * (f64::from(width) / f64::from(height)); //视窗宽度
+        let viewport_width = viewport_height * (f64::from(self.image_width) / f64::from(height)); //视窗宽度
         let camera_center = Vec3::new(0.0, 0.0, 0.0);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
@@ -49,7 +72,7 @@ impl Camera {
         let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
 
         // Calculate the horizontal and vertical delta vectors from pixel to pixel.
-        let pixel_delta_u = viewport_u / width;
+        let pixel_delta_u = viewport_u / self.image_width;
         let pixel_delta_v = viewport_v / height;
 
         // Calculate the location of the upper left pixel.
@@ -64,22 +87,12 @@ impl Camera {
         //    . . . . . . .
         // pixel00即是图中C点，P为(0,0)，所以x、y、z都是负数
         let pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
-
-        Camera {
-            image_height: height,
-            image_width: width,
-            vfov,
-            aspect_ratio,
-            samples_per_pixel,
-            max_depth: 50,
-            center: camera_center,
-            pixel00_loc,
-            pixel_delta_u,
-            pixel_delta_v,
-        }
     }
 
     pub fn render(&self, world: &dyn Hittable) {
+        // initialize
+        self.initialize();
+
         // Render
         if let Err(err) = remove_file("image.ppm"){
             if err.kind() != std::io::ErrorKind::NotFound {
@@ -132,8 +145,8 @@ impl Camera {
         let mut temp_rec = HitRecord::new_default();
         // 防止阴影痤疮(shadow ance)，在接近t=0时会再次击中自己
         if world.hit(r,0.001,INFINITY,&mut temp_rec) {
-            let mut scattered = Ray::new_default();
-            let mut attenuation = Vec3::new_default();
+            let mut scattered = Ray::default();
+            let mut attenuation = Vec3::default();
             if temp_rec.get_material().scatter(r, &temp_rec, &mut attenuation, &mut scattered) {
                 return attenuation * self.ray_color(&scattered, world, depth - 1);
             }

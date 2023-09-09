@@ -1,5 +1,6 @@
 use crate::vec3::*;
 
+#[derive(Default)]
 pub struct Ray {
     origin: Vec3,
     direction: Vec3,
@@ -12,13 +13,6 @@ impl Ray {
             origin,
             direction
         }
-    }
-
-    pub fn new_default() -> Ray {
-        Ray::new(
-            Vec3::new_default(),
-            Vec3::new_default()
-        )
     }
 
     pub fn copy(&mut self, other: Ray) {

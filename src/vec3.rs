@@ -1,9 +1,8 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::io::{self, Write};
-use crate::common;
 use crate::common::*;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone,Default)]
 pub struct Vec3 {
     e: [f64; 3],
 }
@@ -13,10 +12,6 @@ impl Vec3 {
         Vec3 {
             e: [x, y, z]
         }
-    }
-
-    pub fn new_default() -> Vec3 {
-        Vec3::new(0.0, 0.0, 0.0)
     }
 
     pub fn random() -> Vec3 {
