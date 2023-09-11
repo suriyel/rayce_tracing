@@ -22,7 +22,6 @@ pub fn print_image(width:i32) {
     // world.add(Box::new(Sphere::new(Vec3::new(-1.0,0.0,-1.0),0.5,
     //                                Rc::new(Dielectric::new(1.5)))));
 
-    let mut camera = Camera::new(width, 90.0, 16.0 / 9.0, 100);
-    camera.initialize();
+    let camera = Camera::new(width, 90.0, 16.0 / 9.0, 100);
     camera.render(&world);
 }
