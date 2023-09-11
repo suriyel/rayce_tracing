@@ -62,7 +62,7 @@ impl Camera {
         //    . . . . . . .
         //    . . . . . . .
         //    . . . . . . .
-        // pixel00即是图中P点，P为视窗中心
+        // pixel00即是图中P点，P为视窗中心，视窗负责将3D 2k渲染画面投影到2D上
         let pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
         Camera {
