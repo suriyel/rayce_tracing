@@ -54,45 +54,41 @@ impl Camera {
         }
     }
 
-    fn initialize(&self) {
+    pub fn initialize(&mut self) {
         // Image
         let height = f64::floor(f64::from(self.image_width) / self.aspect_ratio) as i32;
-        let height = if height < 1 { 1 } else { height };
-
+        self.image_height = if height < 1 { 1 } else { height };
 
         // Camera
         let focal_length = 1.0; // Camera焦距 Z轴
         let theta = degrees_to_radians(self.vfov);
         let viewport_height = 2.0 * (theta/2.0).tan() * focal_length; //视窗高度
-        let viewport_width = viewport_height * (f64::from(self.image_width) / f64::from(height)); //视窗宽度
-        let camera_center = Vec3::new(0.0, 0.0, 0.0);
+        let viewport_width = viewport_height * (f64::from(self.image_width) / f64::from(self.image_height)); //视窗宽度
+        self.center = Vec3::new(0.0, 0.0, 0.0);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
         let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
         let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
 
         // Calculate the horizontal and vertical delta vectors from pixel to pixel.
-        let pixel_delta_u = viewport_u / self.image_width;
-        let pixel_delta_v = viewport_v / height;
+        self.pixel_delta_u = viewport_u / self.image_width;
+        self.pixel_delta_v = viewport_v / self.image_height;
 
         // Calculate the location of the upper left pixel.
-        let viewport_upper_left = camera_center - Vec3::new(0.0, 0.0, focal_length)
+        let viewport_upper_left = self.center - Vec3::new(0.0, 0.0, focal_length)
             - viewport_u / 2 - viewport_v / 2;
         //  Q     ->△u
         //    P . . . . . .
         // ↓  . . . . . . .
         // △v . . . . . . .
-        //    . . . C . . .
         //    . . . . . . .
         //    . . . . . . .
-        // pixel00即是图中C点，P为(0,0)，所以x、y、z都是负数
-        let pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
+        //    . . . . . . .
+        // pixel00即是图中P点,P点为视窗中心点.Q为左上顶点。
+        self.pixel00_loc = viewport_upper_left + (self.pixel_delta_u + self.pixel_delta_v) * 0.5;
     }
 
-    pub fn render(&self, world: &dyn Hittable) {
-        // initialize
-        self.initialize();
-
+    pub fn render(& self, world: &dyn Hittable) {
         // Render
         if let Err(err) = remove_file("image.ppm"){
             if err.kind() != std::io::ErrorKind::NotFound {
