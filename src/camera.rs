@@ -59,10 +59,10 @@ impl Camera {
         //    P . . . . . .
         // ↓  . . . . . . .
         // △v . . . . . . .
-        //    . . . C . . .
         //    . . . . . . .
         //    . . . . . . .
-        // pixel00即是图中C点，P为(0,0)，所以x、y、z都是负数
+        //    . . . . . . .
+        // pixel00即是图中P点，P为视窗中心
         let pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
 
         Camera {
