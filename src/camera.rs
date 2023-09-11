@@ -5,7 +5,7 @@ use std::io::Write;
 use crate::common::{degrees_to_radians, get_random_double, INFINITY};
 use crate::ray::Ray;
 use crate::sphere::{HitRecord, Hittable};
-use crate::vec3::Vec3;
+use crate::vec3::{cross, Vec3};
 
 pub struct Camera {
     // Rendered image width
@@ -14,6 +14,12 @@ pub struct Camera {
     image_height: i32,
     // 视角 (广角，影响viewport_height与viewport_width)
     vfov:f64,
+    //  Point camera is looking from
+    look_from:Vec3,
+    // Point camera is looking at
+    look_at:Vec3,
+    // Camera-相对"up" 方向
+    vup:Vec3,
     // Ratio of image width over height
     aspect_ratio:f64,
     // 抽样
@@ -27,33 +33,47 @@ pub struct Camera {
     // 视窗向右(X轴)偏移单位向量，例如视窗宽度为2，width 800,单位向量为 (2/800,0,0)
     pixel_delta_u: Vec3,
     // 视窗向下(Y轴)偏移单位向量，例如视窗高度为1，height 600，单位向量为 (0,1/600,0)
-    pixel_delta_v: Vec3
+    pixel_delta_v: Vec3,
+    // Camera frame basis vectors
+    u: Vec3,
+    v: Vec3,
+    w: Vec3
 }
 
 impl Camera {
-    pub fn new(width: i32, vfov: f64, aspect_ratio: f64, samples_per_pixel: i32) -> Camera {
+    pub fn new(
+        width: i32, vfov: f64, aspect_ratio: f64, samples_per_pixel: i32,
+        look_from: Vec3, look_at: Vec3, vup: Vec3) -> Camera {
         // Image
         let height = f64::floor(f64::from(width) / aspect_ratio) as i32;
         let height = if height < 1 { 1 } else { height };
 
 
         // Camera
-        let focal_length = 1.0; // Camera焦距 Z轴
+        let camera_center = look_from;
+        // Camera 视距 Z轴
+        let focal_length = (look_from - look_at).length();
         let theta = degrees_to_radians(vfov);
-        let viewport_height = 2.0 * (theta/2.0).tan() * focal_length; //视窗高度
-        let viewport_width = viewport_height * (f64::from(width) / f64::from(height)); //视窗宽度
-        let camera_center = Vec3::new(0.0, 0.0, 0.0);
+        //视窗高度
+        let viewport_height = 2.0 * (theta / 2.0).tan() * focal_length;
+        //视窗宽度
+        let viewport_width = viewport_height * (f64::from(width) / f64::from(height));
+
+        // Calculate the u,v,w unit basis vectors for the camera coordinate frame.
+        let w = (look_from - look_at).unit_vector();
+        let u = cross(vup,w).unit_vector();
+        let v = cross(w, u);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
-        let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+        let viewport_u = u * viewport_width;
+        let viewport_v = (-v) * viewport_height;
 
         // Calculate the horizontal and vertical delta vectors from pixel to pixel.
         let pixel_delta_u = viewport_u / width;
         let pixel_delta_v = viewport_v / height;
 
         // Calculate the location of the upper left pixel.
-        let viewport_upper_left = camera_center - Vec3::new(0.0, 0.0, focal_length)
+        let viewport_upper_left = camera_center - w * focal_length
             - viewport_u / 2 - viewport_v / 2;
         //  Q     ->△u
         //    P . . . . . .
@@ -69,6 +89,9 @@ impl Camera {
             image_height: height,
             image_width: width,
             vfov,
+            look_from,
+            look_at,
+            vup,
             aspect_ratio,
             samples_per_pixel,
             max_depth: 50,
@@ -76,6 +99,7 @@ impl Camera {
             pixel00_loc,
             pixel_delta_u,
             pixel_delta_v,
+            u,v,w
         }
     }
 
