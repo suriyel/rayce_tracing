@@ -115,8 +115,8 @@ impl Camera {
         file.write_all(format!("P3\n{} {}\n255\n", self.image_width, self.image_height).as_bytes())
             .expect("Failed to Write Color.");
 
-        for j in (0..self.image_height).rev() {
-            println!("Scan lines remaining: {}", j);
+        for j in 0..self.image_height {
+            println!("Scan lines remaining: {}", (self.image_height - j));
             for i in 0..self.image_width {
                 let mut temp_color = Vec3::new(0.0, 0.0, 0.0);
                 for s in 0..self.samples_per_pixel {
