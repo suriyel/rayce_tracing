@@ -5,7 +5,7 @@ use std::io::Write;
 use crate::common::{degrees_to_radians, get_random_double, INFINITY};
 use crate::ray::Ray;
 use crate::sphere::{HitRecord, Hittable};
-use crate::vec3::{cross, Vec3};
+use crate::vec3::{Color, cross, Point, Vec3};
 
 pub struct Camera {
     // Rendered image width
@@ -15,9 +15,9 @@ pub struct Camera {
     // 视角 (广角，影响viewport_height与viewport_width)
     vfov:f64,
     //  Point camera is looking from
-    look_from:Vec3,
+    look_from:Point,
     // Point camera is looking at
-    look_at:Vec3,
+    look_at:Point,
     // Camera-相对"up" 方向
     vup:Vec3,
     // Ratio of image width over height
@@ -51,7 +51,7 @@ pub struct Camera {
 impl Camera {
     pub fn new(
         width: i32, vfov: f64, aspect_ratio: f64, samples_per_pixel: i32,
-        look_from: Vec3, look_at: Vec3, vup: Vec3,
+        look_from: Point, look_at: Point, vup: Vec3,
         focus_dist: f64, defocus_angle: f64) -> Camera {
         // Image
         let height = f64::floor(f64::from(width) / aspect_ratio) as i32;
@@ -137,7 +137,7 @@ impl Camera {
         for j in 0..self.image_height {
             println!("Scan lines remaining: {}", (self.image_height - j));
             for i in 0..self.image_width {
-                let mut temp_color = Vec3::new(0.0, 0.0, 0.0);
+                let mut temp_color = Color::new(0.0, 0.0, 0.0);
                 for s in 0..self.samples_per_pixel {
                     let r = self.get_ray(i, j);
                     temp_color += self.ray_color(&r, world, self.max_depth);
@@ -159,7 +159,7 @@ impl Camera {
         return Ray::new(ray_origin, ray_direction)
     }
 
-    pub fn defocus_disk_sample(&self) ->Vec3 {
+    pub fn defocus_disk_sample(&self) -> Point {
         let p = Vec3::random_in_unit_disk();
         self.center + (self.defocus_disk_u * p.x()) + (self.defocus_disk_v * p.y())
     }
@@ -170,10 +170,10 @@ impl Camera {
         return self.pixel_delta_u * px + self.pixel_delta_v * py;
     }
 
-    pub fn ray_color(&self, r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
+    pub fn ray_color(&self, r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
         if depth <= 0 {
             // 达到反射层数上线，返回黑色（也可返回红色看看哪里不停的散射，但每层都需要返回红色）
-            return Vec3::new(0.0, 0.0, 0.0);
+            return Color::new(0.0, 0.0, 0.0);
         }
         
         // 和(0,0,-1)小球求交集
@@ -181,16 +181,16 @@ impl Camera {
         // 防止阴影痤疮(shadow ance)，在接近t=0时会再次击中自己
         if world.hit(r,0.001,INFINITY,&mut temp_rec) {
             let mut scattered = Ray::default();
-            let mut attenuation = Vec3::default();
+            let mut attenuation = Color::default();
             if temp_rec.get_material().scatter(r, &temp_rec, &mut attenuation, &mut scattered) {
                 return attenuation * self.ray_color(&scattered, world, depth - 1);
             }
 
-            return Vec3::new(0.0, 0.0, 0.0);
+            return Color::new(0.0, 0.0, 0.0);
         }
 
         let unit_direction = r.get_direction().unit_vector();
         let a = (unit_direction.y() + 1.0) * 0.5;
-        Vec3::new(1.0, 1.0, 1.0) * (1.0 - a) + Vec3::new(0.5, 0.7, 1.0) * a
+        Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
     }
 }

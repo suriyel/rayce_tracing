@@ -2,6 +2,12 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssi
 use std::io::{self, Write};
 use crate::common::*;
 
+// 标注颜色类型
+pub type Color = Vec3;
+
+// 标注三维点类型
+pub type Point = Vec3;
+
 #[derive(Debug, Copy, Clone,Default)]
 pub struct Vec3 {
     e: [f64; 3],
