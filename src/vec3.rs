@@ -119,6 +119,15 @@ impl Vec3 {
         r0 = r0 * r0;
         r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
     }
+
+    pub fn random_in_unit_disk()->Vec3 {
+        loop {
+            let p = Vec3::new(random_double(-1.0, 1.0), random_double(-1.0, 1.0), 0.0);
+            if p.length_squared() < 1.0 {
+                return p;
+            }
+        }
+    }
 }
 
 impl Add for Vec3 {

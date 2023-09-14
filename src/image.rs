@@ -40,6 +40,8 @@ pub fn print_image(width:i32) {
     let camera = Camera::new(width, 20.0, 16.0 / 9.0, 100,
                              Vec3::new(-2.0, 2.0, 1.0),
                              Vec3::new(0.0, 0.0, -1.0),
-                             Vec3::new(0.0, 1.0, 0.0));
+                             Vec3::new(0.0, 1.0, 0.0),
+                             3.4,
+                             10.0);
     camera.render(&world);
 }

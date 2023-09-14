@@ -37,13 +37,22 @@ pub struct Camera {
     // Camera frame basis vectors
     u: Vec3,
     v: Vec3,
-    w: Vec3
+    w: Vec3,
+    // 散焦角度
+    defocus_angle:f64,
+    // 散焦水平半径
+    defocus_disk_u:Vec3,
+    // 散焦垂直半径
+    defocus_disk_v:Vec3,
+    // 相机lookfrom点到屏幕焦距
+    focus_dist:f64,
 }
 
 impl Camera {
     pub fn new(
         width: i32, vfov: f64, aspect_ratio: f64, samples_per_pixel: i32,
-        look_from: Vec3, look_at: Vec3, vup: Vec3) -> Camera {
+        look_from: Vec3, look_at: Vec3, vup: Vec3,
+        focus_dist: f64, defocus_angle: f64) -> Camera {
         // Image
         let height = f64::floor(f64::from(width) / aspect_ratio) as i32;
         let height = if height < 1 { 1 } else { height };
@@ -52,10 +61,9 @@ impl Camera {
         // Camera
         let camera_center = look_from;
         // Camera 视距 Z轴
-        let focal_length = (look_from - look_at).length();
         let theta = degrees_to_radians(vfov);
         //视窗高度
-        let viewport_height = 2.0 * (theta / 2.0).tan() * focal_length;
+        let viewport_height = 2.0 * (theta / 2.0).tan() * focus_dist;
         //视窗宽度
         let viewport_width = viewport_height * (f64::from(width) / f64::from(height));
 
@@ -73,7 +81,7 @@ impl Camera {
         let pixel_delta_v = viewport_v / height;
 
         // Calculate the location of the upper left pixel.
-        let viewport_upper_left = camera_center - w * focal_length
+        let viewport_upper_left = camera_center - w * focus_dist
             - viewport_u / 2 - viewport_v / 2;
         //  Q     ->△u
         //    P . . . . . .
@@ -84,6 +92,11 @@ impl Camera {
         //    . . . . . . .
         // pixel00即是图中P点，P为视窗中心，视窗负责将3D 2k渲染画面投影到2D上
         let pixel00_loc = viewport_upper_left + (pixel_delta_u + pixel_delta_v) * 0.5;
+
+        // 计算摄像机散镜片基本向量
+        let defocus_radius = focus_dist * degrees_to_radians(defocus_angle /2.0).tan();
+        let defocus_disk_u = u * defocus_radius;
+        let defocus_disk_v = v * defocus_radius;
 
         Camera {
             image_height: height,
@@ -99,7 +112,13 @@ impl Camera {
             pixel00_loc,
             pixel_delta_u,
             pixel_delta_v,
-            u,v,w
+            u,
+            v,
+            w,
+            defocus_angle,
+            defocus_disk_u,
+            defocus_disk_v,
+            focus_dist
         }
     }
 
@@ -135,9 +154,14 @@ impl Camera {
         let pixel_center = self.pixel00_loc + (self.pixel_delta_u * i) + (self.pixel_delta_v * j);
         let pixel_sample = pixel_center + self.pixel_sample_square();
 
-        let ray_origin = self.center;
+        let ray_origin = if self.defocus_angle <= 0.0 { self.center } else { self.defocus_disk_sample() };
         let ray_direction = pixel_sample - ray_origin;
         return Ray::new(ray_origin, ray_direction)
+    }
+
+    pub fn defocus_disk_sample(&self) ->Vec3 {
+        let p = Vec3::random_in_unit_disk();
+        self.center + (self.defocus_disk_u * p.x()) + (self.defocus_disk_v * p.y())
     }
 
     pub fn pixel_sample_square(&self)->Vec3 {
