@@ -1,18 +1,18 @@
 use crate::common::{ff_min, get_random_double, random_double};
 use crate::ray::Ray;
 use crate::sphere::HitRecord;
-use crate::vec3::{dot, Vec3};
+use crate::vec3::{Color, dot, Vec3};
 
 pub trait Material {
     fn scatter(&self, r_in: &Ray, hit_record: &HitRecord, attenuation: &mut Vec3, scattered: &mut Ray) -> bool;
 }
 
 pub struct Lambertian {
-    albedo: Vec3
+    albedo: Color
 }
 
 impl Lambertian {
-    pub fn new(albedo: Vec3)->Lambertian {
+    pub fn new(albedo: Color)->Lambertian {
         Lambertian {
             albedo
         }

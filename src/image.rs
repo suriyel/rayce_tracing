@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use crate::camera::Camera;
-use crate::common::PI;
+use crate::common::{get_random_double, PI, random_double};
 use crate::material::{Dielectric, Lambertian, Metal};
 use crate::vec3::{Color, Point, Vec3};
 use crate::sphere::*;
@@ -8,40 +8,47 @@ use crate::sphere::*;
 pub fn print_image(width:i32) {
     // sphere
     let mut world = HittableList::new();
-    // P3
-    let material_left = Rc::new(Dielectric::new(1.5));
-    let material_right = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.0));
-    world.add(Box::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0,
-                                   Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0))))));
-    world.add(Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5,
-                                   Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5))))));
-    world.add(Box::new(Sphere::new(Point::new(-1.0, 0.0, -1.0), 0.5,
-                                   material_left.clone())));
-    world.add(Box::new(Sphere::new(Point::new(-1.0, 0.0, -1.0), -0.4,
-                                   material_left.clone())));
-    world.add(Box::new(Sphere::new(Point::new(1.0, 0.0, -1.0), 0.5,
-                                   material_right)));
+    let ground_material = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    world.add(Box::new(Sphere::new(Point::new(0.0, -1000.0, 0.0), 1000.0, ground_material)));
 
-    // P2
-    // world.add(Box::new(Sphere::new(Vec3::new(-r, 0.0, -1.0), r,
-    //                                Rc::new(Lambertian::new(Vec3::new(0.0, 0.0, 1.0))))));
-    // world.add(Box::new(Sphere::new(Vec3::new(r, 0.0, -1.0), r,
-    //                                Rc::new(Lambertian::new(Vec3::new(1.0, 0.0, 0.0))))));
-    // P1
-    // world.add(Box::new(Sphere::new(Vec3::new(0.0,0.0,-1.0),0.5,
-    //                                Rc::new(Lambertian::new(Vec3::new(0.7, 0.3, 0.3))))));
-    // world.add(Box::new(Sphere::new(Vec3::new(0.0,-100.5,-1.0),100.0,
-    //                                Rc::new(Lambertian::new(Vec3::new(0.8, 0.8, 0.0))))));
-    // world.add(Box::new(Sphere::new(Vec3::new(1.0,0.0,-1.0),0.5,
-    //                                Rc::new(Metal::new(Vec3::new(0.8, 0.6, 0.2), 0.0)))));
-    // world.add(Box::new(Sphere::new(Vec3::new(-1.0,0.0,-1.0),0.5,
-    //                                Rc::new(Dielectric::new(1.5)))));
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat = get_random_double();
+            let center = Point::new(get_random_double() * 0.9 + f64::from(a), 0.2, get_random_double() * 0.9 + f64::from(b));
 
-    let camera = Camera::new(width, 20.0, 16.0 / 9.0, 100,
-                             Point::new(-2.0, 2.0, 1.0),
-                             Point::new(0.0, 0.0, -1.0),
+            if (center - Point::new(4.0,0.2,0.0)).length() > 0.9 {
+
+                if choose_mat < 0.8 {
+                    // diffuse
+                    let albedo = Color::random() * Color::random();
+                    world.add(Box::new(Sphere::new(center, 0.2, Rc::new(Lambertian::new(albedo)))));
+                }
+                else if choose_mat < 0.95 {
+                    // metal
+                    let albedo = Color::random_in_range(0.5, 1.0);
+                    let fuzz = random_double(0.0, 0.5);
+                    world.add(Box::new(Sphere::new(center, 0.2, Rc::new(Metal::new(albedo, fuzz)))));
+                }
+                else {
+                    // glass
+                    world.add(Box::new(Sphere::new(center, 0.2, Rc::new(Dielectric::new(1.5)))));
+                }
+            }
+        }
+    }
+
+    world.add(Box::new(Sphere::new(Point::new(0.0, 1.0, 0.0), 1.0,
+                                   Rc::new(Dielectric::new(1.5)))));
+    world.add(Box::new(Sphere::new(Point::new(-4.0, 1.0, 0.0), 1.0,
+                                   Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1))))));
+    world.add(Box::new(Sphere::new(Point::new(4.0, 1.0, 0.0), 1.0,
+                                   Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0)))));
+
+    let camera = Camera::new(width, 20.0, 16.0 / 9.0, 500,
+                             Point::new(13.0, 2.0, 3.0),
+                             Point::new(0.0, 0.0, 0.0),
                              Vec3::new(0.0, 1.0, 0.0),
-                             3.4,
-                             10.0);
+                             10.0,
+                             0.6);
     camera.render(&world);
 }
