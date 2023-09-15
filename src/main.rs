@@ -24,7 +24,7 @@ fn f_3() {
 fn f_2() {
     let v1 = Vec3::new(0.0, 0.0, 0.0);
     let v2 = Vec3::new(1.0, 1.0, 1.0);
-    let ray = Ray::new(v1, v2);
+    let ray = Ray::new(v1, v2, 0.0);
     let v3 = ray.at(2.0);
     // println!("{:?}", v3);
     println!("{:?}", v3);

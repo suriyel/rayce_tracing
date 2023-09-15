@@ -23,7 +23,7 @@ impl Material for Lambertian {
     fn scatter(&self, r_in: &Ray, hit_record: &HitRecord, attenuation: &mut Vec3, scattered: &mut Ray) ->bool {
         let scatter_direction = hit_record.get_normal() + Vec3::random_in_unit_sphere();
         attenuation.copy(self.albedo);
-        scattered.copy(Ray::new(hit_record.get_p(), scatter_direction));
+        scattered.copy(Ray::new(hit_record.get_p(), scatter_direction, r_in.get_time()));
         true
     }
 }
@@ -45,7 +45,7 @@ impl Metal {
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, hit_record: &HitRecord, attenuation: &mut Vec3, scattered: &mut Ray) -> bool {
         let reflected = Vec3::reflect(r_in.get_direction().unit_vector(), hit_record.get_normal());
-        scattered.copy(Ray::new(hit_record.get_p(), reflected + Vec3::random_in_unit_sphere() * self.fuzz));
+        scattered.copy(Ray::new(hit_record.get_p(), reflected + Vec3::random_in_unit_sphere() * self.fuzz, r_in.get_time()));
         attenuation.copy(self.albedo);
         dot(scattered.get_direction(), hit_record.get_normal()) > 0.0
     }
@@ -78,7 +78,7 @@ impl Material for Dielectric {
         if etai_over_etat * sin_theta > 1.0 {
             // 反射
             let reflected = Vec3::reflect(unit_direction, hit_record.get_normal());
-            scattered.copy(Ray::new(hit_record.get_p(), reflected));
+            scattered.copy(Ray::new(hit_record.get_p(), reflected, r_in.get_time()));
             return true;
         }
 
@@ -86,12 +86,12 @@ impl Material for Dielectric {
         let reflect_prob = Vec3::schlick(cos_theta,etai_over_etat);
         if get_random_double() < reflect_prob {
             let reflected = Vec3::reflect(unit_direction, hit_record.get_normal());
-            scattered.copy(Ray::new(hit_record.get_p(), reflected));
+            scattered.copy(Ray::new(hit_record.get_p(), reflected, r_in.get_time()));
         }
 
         // 折射
         let refracted = Vec3::refract(unit_direction, hit_record.get_normal(), etai_over_etat);
-        scattered.copy(Ray::new(hit_record.get_p(), refracted));
+        scattered.copy(Ray::new(hit_record.get_p(), refracted, r_in.get_time()));
         true
     }
 }

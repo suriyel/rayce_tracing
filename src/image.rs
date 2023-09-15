@@ -21,7 +21,8 @@ pub fn print_image(width:i32) {
                 if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color::random() * Color::random();
-                    world.add(Box::new(Sphere::new(center, 0.2, Rc::new(Lambertian::new(albedo)))));
+                    let center2 = center + Vec3::new(0.0, random_double(0.0, 0.5), 0.0);
+                    world.add(Box::new(Sphere::new_moving_sphere(center,center2, 0.2, Rc::new(Lambertian::new(albedo)))));
                 }
                 else if choose_mat < 0.95 {
                     // metal
@@ -44,7 +45,7 @@ pub fn print_image(width:i32) {
     world.add(Box::new(Sphere::new(Point::new(4.0, 1.0, 0.0), 1.0,
                                    Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0)))));
 
-    let camera = Camera::new(width, 20.0, 16.0 / 9.0, 500,
+    let camera = Camera::new(width, 20.0, 16.0 / 9.0, 100,
                              Point::new(13.0, 2.0, 3.0),
                              Point::new(0.0, 0.0, 0.0),
                              Vec3::new(0.0, 1.0, 0.0),

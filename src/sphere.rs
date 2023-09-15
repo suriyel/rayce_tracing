@@ -96,33 +96,51 @@ pub trait Hittable {
 }
 
 pub struct Sphere {
-    cen:Vec3,
-    r:f64,
-    material:Rc<dyn Material>,
+    cen: Point,
+    cen_vec: Point,
+    is_moving: bool,
+    r: f64,
+    material: Rc<dyn Material>,
 }
 
 impl Sphere{
-    pub fn new(center:Vec3,radius:f64,material:Rc<dyn Material>)->Sphere {
+    pub fn new_moving_sphere(center:Point,center2:Point,radius:f64,material:Rc<dyn Material>)->Sphere {
         Sphere {
             cen: center,
+            cen_vec: center2 - center,
+            is_moving: true,
             r: radius,
             material
         }
     }
 
-    pub fn get_center(&self) ->Vec3 {
+    pub fn new(center:Point,radius:f64,material:Rc<dyn Material>)->Sphere {
+        Sphere {
+            cen: center,
+            cen_vec: Point::default(),
+            is_moving: false,
+            r: radius,
+            material
+        }
+    }
+
+    pub fn get_center(&self) ->Point {
         self.cen
+    }
+
+    pub fn get_moving_center(&self,time:f64) -> Point {
+        self.cen + self.cen_vec * time
     }
 
     pub fn get_radius(&self)->f64 {
         self.r
     }
 
-    fn set_record(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord, temp: f64) -> Option<bool> {
+    fn set_record(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord, temp: f64,center:Point) -> Option<bool> {
         if temp < t_max && temp > t_min {
             rec.set_t(temp);
             rec.set_p(r.at(temp));
-            rec.set_face_normal(r, (rec.get_p() - self.get_center()) / self.get_radius());
+            rec.set_face_normal(r, (rec.get_p() - center) / self.get_radius());
             rec.material = self.material.clone();
             return Some(true);
         }
@@ -132,7 +150,8 @@ impl Sphere{
 
 impl Hittable for Sphere {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
-        let oc = r.get_origin() - self.get_center();
+        let center = if self.is_moving { self.get_moving_center(r.get_time()) } else { self.cen };
+        let oc = r.get_origin() - center;
         let a = r.get_direction().length_squared();
         let half_b = dot(oc, r.get_direction());
         let c = oc.length_squared() - self.get_radius() * self.get_radius();
@@ -142,12 +161,12 @@ impl Hittable for Sphere {
             let root = discriminant.sqrt();
             // 圆和射线交叠判定，二元一次方程两组解
             let temp = (-half_b - root) / a;
-            if let Some(value) = self.set_record(r, t_min, t_max, rec, temp) {
+            if let Some(value) = self.set_record(r, t_min, t_max, rec, temp,center) {
                 return value;
             }
 
             let temp = (-half_b + root) / a;
-            if let Some(value) = self.set_record(r, t_min, t_max, rec, temp) {
+            if let Some(value) = self.set_record(r, t_min, t_max, rec, temp,center) {
                 return value
             }
         }
