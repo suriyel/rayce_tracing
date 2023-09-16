@@ -23,11 +23,11 @@ impl Ray {
         self.direction = other.direction;
     }
 
-    pub fn get_origin(&self) -> Vec3 {
+    pub fn original(&self) -> Vec3 {
         return self.origin;
     }
 
-    pub fn get_direction(&self) -> Vec3 {
+    pub fn direction(&self) -> Vec3 {
         return self.direction;
     }
 

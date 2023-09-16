@@ -190,7 +190,7 @@ impl Camera {
             return Color::new(0.0, 0.0, 0.0);
         }
 
-        let unit_direction = r.get_direction().unit_vector();
+        let unit_direction = r.direction().unit_vector();
         let a = (unit_direction.y() + 1.0) * 0.5;
         Color::new(1.0, 1.0, 1.0) * (1.0 - a) + Color::new(0.5, 0.7, 1.0) * a
     }

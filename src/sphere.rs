@@ -43,7 +43,7 @@ impl HitRecord {
     }
 
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
-        self.front_face = dot(r.get_direction(), outward_normal) < 0.0;
+        self.front_face = dot(r.direction(), outward_normal) < 0.0;
         let temp  = if self.front_face { outward_normal } else { -outward_normal };
         self.normal = temp
     }
@@ -151,9 +151,9 @@ impl Sphere{
 impl Hittable for Sphere {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
         let center = if self.is_moving { self.get_moving_center(r.get_time()) } else { self.cen };
-        let oc = r.get_origin() - center;
-        let a = r.get_direction().length_squared();
-        let half_b = dot(oc, r.get_direction());
+        let oc = r.original() - center;
+        let a = r.direction().length_squared();
+        let half_b = dot(oc, r.direction());
         let c = oc.length_squared() - self.get_radius() * self.get_radius();
         let discriminant = half_b * half_b - a * c;
 

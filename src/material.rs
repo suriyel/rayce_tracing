@@ -44,10 +44,10 @@ impl Metal {
 
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, hit_record: &HitRecord, attenuation: &mut Vec3, scattered: &mut Ray) -> bool {
-        let reflected = Vec3::reflect(r_in.get_direction().unit_vector(), hit_record.get_normal());
+        let reflected = Vec3::reflect(r_in.direction().unit_vector(), hit_record.get_normal());
         scattered.copy(Ray::new(hit_record.get_p(), reflected + Vec3::random_in_unit_sphere() * self.fuzz, r_in.get_time()));
         attenuation.copy(self.albedo);
-        dot(scattered.get_direction(), hit_record.get_normal()) > 0.0
+        dot(scattered.direction(), hit_record.get_normal()) > 0.0
     }
 }
 
@@ -72,7 +72,7 @@ impl Material for Dielectric {
             self.ri
         };
 
-        let unit_direction = r_in.get_direction().unit_vector();
+        let unit_direction = r_in.direction().unit_vector();
         let cos_theta = ff_min(dot(-unit_direction, hit_record.get_normal()), 1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
         if etai_over_etat * sin_theta > 1.0 {

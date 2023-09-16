@@ -5,13 +5,21 @@ mod sphere;
 mod common;
 mod camera;
 mod material;
+mod aabb;
 
 use std::env;
+use crate::common::Interval;
 use crate::vec3::Vec3;
 use crate::ray::*;
 
 fn main() {
-    f_1()
+    f_4()
+}
+
+fn f_4() {
+    let a = Vec3::new(0.0,1.0,2.0);
+    let b = a.get(0usize).unwrap();
+    println!("{}",b);
 }
 
 fn f_3() {
